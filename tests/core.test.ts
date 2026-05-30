@@ -84,6 +84,7 @@ describe("managed naming", () => {
       "s_a_feature%2Fnotify-ui"
     );
     expect(buildWorkspaceSessionName("/repo/a")).toBe("a");
+    expect(buildWorkspaceSessionName("/repo/yoyogi-local.tokyo")).toBe("yoyogi-local_tokyo");
   });
 
   it("builds stable project keys from directory paths", () => {

@@ -189,7 +189,8 @@ export function buildManagedName(projectRoot: string, branch: string): string {
 
 export function buildWorkspaceSessionName(projectRoot: string): string {
   const normalizedRoot = normalizeProjectRoot(projectRoot);
-  return normalizedRoot.split("/").filter(Boolean).at(-1) ?? normalizedRoot;
+  const name = normalizedRoot.split("/").filter(Boolean).at(-1) ?? normalizedRoot;
+  return name.replace(/[.:]/g, "_");
 }
 
 export function buildProjectSlug(projectRoot: string): string {
