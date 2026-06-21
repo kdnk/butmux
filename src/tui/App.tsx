@@ -315,7 +315,7 @@ export function TuiApp({ service }: { service: AppService }) {
 function Header({ busy, lastSync }: { busy: string | undefined; lastSync: string | undefined }) {
   return (
     <Box gap={2}>
-      <Text bold color="cyan">seiton</Text>
+      <Text bold color="cyan">butmux</Text>
       <Text dimColor>r refresh</Text>
       <Text dimColor>s sync</Text>
       <Text dimColor>a add</Text>

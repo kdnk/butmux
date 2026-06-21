@@ -2,18 +2,18 @@
 
 ## Goal
 
-Replace Seiton's Electron application with a TypeScript Ink terminal UI while preserving the existing GitButler, tmux, terminal-backend, workspace-session, and coding-agent status workflows.
+Replace butmux's Electron application with a TypeScript Ink terminal UI while preserving the existing GitButler, tmux, terminal-backend, workspace-session, and coding-agent status workflows.
 
 After this change:
 
-- running `seiton` without a subcommand opens the terminal UI
-- `seiton hook <agent> <event>`, `seiton notify <message>`, and `seiton open` continue to work for agent integration and shell workflows
+- running `butmux` without a subcommand opens the terminal UI
+- `butmux hook <agent> <event>`, `butmux notify <message>`, and `butmux open` continue to work for agent integration and shell workflows
 - Electron, Vite renderer code, Electron packaging, and Electron-specific tests are removed
 - project/context ordering remains supported through keyboard reorder instead of drag and drop
 
 ## Why
 
-Seiton's core purpose is managing terminal-based work contexts. A terminal UI fits that workflow better than an Electron window, avoids separate app packaging, and keeps the tool close to tmux, Kitty, WezTerm, GitButler, Codex, and Claude Code.
+butmux's core purpose is managing terminal-based work contexts. A terminal UI fits that workflow better than an Electron window, avoids separate app packaging, and keeps the tool close to tmux, Kitty, WezTerm, GitButler, Codex, and Claude Code.
 
 The existing code already separates much of the domain logic into `src/core`, so the migration should reuse that logic instead of rewriting the GitButler, tmux, terminal, and agent detection behavior.
 
@@ -25,28 +25,28 @@ This design changes:
 - persistence paths for user configuration and registry state
 - Electron IPC handlers into a reusable core service
 - user interface from React DOM to Ink
+- product, command, XDG path, pane option, and managed tmux session naming from the old project name to `butmux`
 - package dependencies, build scripts, tests, and README
 
 This design does not change:
 
-- managed tmux session naming
 - GitButler branch detection and rename behavior
 - supported terminal backends, which remain `kitty` and `wezterm`
-- hook payload parsing or tmux pane option names
+- hook payload parsing
 - plugin distribution for Codex or Claude Code; that remains a future design
 
 ## User Experience
 
 ### Launch
 
-`seiton` with no subcommand starts the Ink terminal UI.
+`butmux` with no subcommand starts the Ink terminal UI.
 
 The existing non-interactive commands remain:
 
 ```text
-seiton hook <agent> <event>
-seiton notify <message>
-seiton open
+butmux hook <agent> <event>
+butmux notify <message>
+butmux open
 ```
 
 ### Layout
@@ -158,8 +158,8 @@ export type AppService = {
   removeOrphan(input: RemoveOrphanInput): Promise<AppState>;
   reorderProjects(from: number, to: number): Promise<AppState>;
   reorderContexts(projectRoot: string, from: number, to: number): Promise<AppState>;
-  getSettings(): Promise<SeitonConfig>;
-  updateSettings(input: Partial<SeitonConfig>): Promise<SeitonConfig>;
+  getSettings(): Promise<ButmuxConfig>;
+  updateSettings(input: Partial<ButmuxConfig>): Promise<ButmuxConfig>;
 };
 ```
 
@@ -195,11 +195,11 @@ Live updates should refresh the TUI with a short debounce, reusing `watchLiveUpd
 
 ## Persistence
 
-Seiton uses XDG paths only. Legacy Electron app data is ignored.
+butmux uses XDG paths only. Legacy Electron app data is ignored.
 
 ```text
-${XDG_CONFIG_HOME:-~/.config}/seiton/config.json
-${XDG_STATE_HOME:-~/.local/state}/seiton/registry.json
+${XDG_CONFIG_HOME:-~/.config}/butmux/config.json
+${XDG_STATE_HOME:-~/.local/state}/butmux/registry.json
 ```
 
 `config.json` stores user settings:
@@ -229,6 +229,20 @@ If `config.json` is missing, default to `kitty`.
 If `registry.json` is missing, default to an empty registry.
 
 `Registry.settings` can be removed or ignored after config support lands. The terminal backend source of truth is `config.json`.
+
+## Naming
+
+The CLI, package name, XDG paths, UI label, and hook examples use `butmux`.
+
+New managed tmux sessions and terminal tabs use:
+
+```text
+bm_<project-slug>_<branch-key>
+```
+
+The core model still recognizes existing `s_` managed sessions as legacy names for detection and orphan cleanup.
+
+Agent hook pane options use `@butmux_*`.
 
 ## Error Handling
 
@@ -305,7 +319,7 @@ Required README topics:
 
 - requirements
 - install
-- run `seiton`
+- run `butmux`
 - keyboard controls
 - XDG config and state paths
 - terminal backend configuration
@@ -320,7 +334,7 @@ This is a direct migration for a single-user tool. There is no Electron data mig
 
 The implementation is complete when:
 
-- `seiton` launches the Ink TUI by default
+- `butmux` launches the Ink TUI by default
 - existing hook/notify/open commands still work
 - Electron files and package metadata are gone
 - README describes the terminal UI

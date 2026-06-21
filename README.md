@@ -1,6 +1,6 @@
-# seiton
+# butmux
 
-Seiton is a terminal UI for managing GitButler branches as real tmux and terminal work contexts.
+butmux is a terminal UI for managing GitButler branches as real tmux and terminal work contexts.
 
 It gives you one place to:
 
@@ -20,7 +20,7 @@ It gives you one place to:
 - `but` (GitButler CLI)
 - `kitty` with remote control enabled, or `wezterm`
 
-Seiton assumes working contexts are backed by:
+butmux assumes working contexts are backed by:
 
 - GitButler branch state
 - tmux sessions
@@ -39,7 +39,7 @@ During local development, run the built command directly:
 ./dist/cli.js
 ```
 
-To expose `seiton` on `PATH`, use your preferred Node/package workflow, for example:
+To expose `butmux` on `PATH`, use your preferred Node/package workflow, for example:
 
 ```bash
 npm link
@@ -50,13 +50,13 @@ npm link
 Start the terminal UI:
 
 ```bash
-seiton
+butmux
 ```
 
 Add the current directory from a shell:
 
 ```bash
-seiton open
+butmux open
 ```
 
 ## Keyboard
@@ -79,10 +79,10 @@ q or Ctrl+C        quit
 
 ## Configuration
 
-Seiton stores user settings under XDG config:
+butmux stores user settings under XDG config:
 
 ```text
-${XDG_CONFIG_HOME:-~/.config}/seiton/config.json
+${XDG_CONFIG_HOME:-~/.config}/butmux/config.json
 ```
 
 Example:
@@ -98,14 +98,14 @@ Supported terminal backends:
 - `kitty`
 - `wezterm`
 
-If the config file is missing, Seiton defaults to `kitty`.
+If the config file is missing, butmux defaults to `kitty`.
 
 ## State
 
-Seiton stores projects, contexts, and ordering under XDG state:
+butmux stores projects, contexts, and ordering under XDG state:
 
 ```text
-${XDG_STATE_HOME:-~/.local/state}/seiton/registry.json
+${XDG_STATE_HOME:-~/.local/state}/butmux/registry.json
 ```
 
 Example shape:
@@ -117,9 +117,9 @@ Example shape:
 }
 ```
 
-## How Seiton Works
+## How butmux Works
 
-For each GitButler branch in a registered project, Seiton manages:
+For each GitButler branch in a registered project, butmux manages:
 
 - one tmux session
 - one terminal tab
@@ -128,24 +128,26 @@ For each GitButler branch in a registered project, Seiton manages:
 Managed names use this shape:
 
 ```text
-s_<project-slug>_<branch-key>
+bm_<project-slug>_<branch-key>
 ```
+
+Existing `s_` managed session names are still recognized as legacy sessions for detection and cleanup.
 
 Examples:
 
-- `git-butler-practice` + `seiton-parser-test` -> `s_gbp_seiton-parser-test`
-- `seiton` + `kn-branch-1` -> `s_seiton_kn-branch-1`
+- `git-butler-practice` + `butmux-parser-test` -> `bm_gbp_butmux-parser-test`
+- `butmux` + `kn-branch-1` -> `bm_butmux_kn-branch-1`
 
-Each project can also have a workspace session. Its tmux session name is the project directory basename, for example `/repo/seiton` -> `seiton`.
+Each project can also have a workspace session. Its tmux session name is the project directory basename, for example `/repo/butmux` -> `butmux`.
 
 ## Agent Integration
 
-Seiton supports Codex and Claude status updates through tmux pane options.
+butmux supports Codex and Claude status updates through tmux pane options.
 
 The intended flow is:
 
 ```text
-Agent hook -> seiton hook <agent> <event> -> tmux pane options -> Seiton TUI refresh
+Agent hook -> butmux hook <agent> <event> -> tmux pane options -> butmux TUI refresh
 ```
 
 ### Supported Codex Events
@@ -172,15 +174,15 @@ These map to:
 
 ### tmux Pane Options
 
-Seiton writes and reads these pane options:
+butmux writes and reads these pane options:
 
-- `@seiton_agent`
-- `@seiton_status`
-- `@seiton_prompt`
-- `@seiton_cwd`
-- `@seiton_started_at`
-- `@seiton_attention`
-- `@seiton_wait_reason`
+- `@butmux_agent`
+- `@butmux_status`
+- `@butmux_prompt`
+- `@butmux_cwd`
+- `@butmux_started_at`
+- `@butmux_attention`
+- `@butmux_wait_reason`
 
 Pane status values:
 
@@ -208,7 +210,7 @@ Add commands to `~/.codex/hooks.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "seiton hook codex session-start"
+            "command": "butmux hook codex session-start"
           }
         ]
       }
@@ -218,7 +220,7 @@ Add commands to `~/.codex/hooks.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "seiton hook codex user-prompt-submit"
+            "command": "butmux hook codex user-prompt-submit"
           }
         ]
       }
@@ -228,7 +230,7 @@ Add commands to `~/.codex/hooks.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "seiton hook codex stop"
+            "command": "butmux hook codex stop"
           }
         ]
       }
@@ -237,12 +239,12 @@ Add commands to `~/.codex/hooks.json`:
 }
 ```
 
-If `seiton` is not on `PATH`, use an absolute checkout path:
+If `butmux` is not on `PATH`, use an absolute checkout path:
 
 ```json
 {
   "type": "command",
-  "command": "cd /ABS/PATH/TO/SEITON && ./dist/cli.js hook codex stop"
+  "command": "cd /ABS/PATH/TO/BUTMUX && ./dist/cli.js hook codex stop"
 }
 ```
 
@@ -251,23 +253,23 @@ If `seiton` is not on `PATH`, use an absolute checkout path:
 Claude hooks call the same CLI entrypoint with `claude` as the agent name:
 
 ```text
-seiton hook claude session-start
-seiton hook claude user-prompt-submit
-seiton hook claude notification
-seiton hook claude stop
-seiton hook claude stop-failure
-seiton hook claude post-tool-use
-seiton hook claude session-end
+butmux hook claude session-start
+butmux hook claude user-prompt-submit
+butmux hook claude notification
+butmux hook claude stop
+butmux hook claude stop-failure
+butmux hook claude post-tool-use
+butmux hook claude session-end
 ```
 
 Add matching commands to `~/.claude/settings.json` or a project-local `.claude/settings.json`.
 
 ## Manual Notifications
 
-Use `seiton notify` inside a tmux pane when you need to raise a waiting state manually:
+Use `butmux notify` inside a tmux pane when you need to raise a waiting state manually:
 
 ```bash
-seiton notify "implementation finished"
+butmux notify "implementation finished"
 ```
 
 ## Build
@@ -290,10 +292,10 @@ npm test
 
 ## Operational Notes
 
-- If `but status -fv` reports `Setup required: No GitButler project found`, Seiton runs `but setup` and retries.
-- If a terminal tab is missing during focus, Seiton creates one.
-- If a tmux session is missing during focus, Seiton creates one.
-- If a target pane lives in another tmux window, Seiton switches to that window before selecting the pane.
+- If `but status -fv` reports `Setup required: No GitButler project found`, butmux runs `but setup` and retries.
+- If a terminal tab is missing during focus, butmux creates one.
+- If a tmux session is missing during focus, butmux creates one.
+- If a target pane lives in another tmux window, butmux switches to that window before selecting the pane.
 - Orphan cleanup removes both the tmux session and matching terminal tab.
 
 ## Development Notes

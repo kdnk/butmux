@@ -5,7 +5,7 @@ import { realpathSync } from "node:fs";
 import { applyAgentHook, notifyCurrentPane } from "./core/commands";
 import { emitLiveUpdate } from "./core/live-updates";
 import { ensureProject, type Registry } from "./core/model";
-import { resolveSeitonPaths } from "./core/paths";
+import { resolveButmuxPaths } from "./core/paths";
 import { loadRegistry, saveRegistry } from "./core/registry";
 
 export type CliDeps = {
@@ -25,17 +25,17 @@ export type CliDeps = {
 };
 
 const usage = [
-  "Usage: seiton",
-  "Usage: seiton hook <agent> <event>",
-  "Usage: seiton notify <message>",
-  "Usage: seiton open"
+  "Usage: butmux",
+  "Usage: butmux hook <agent> <event>",
+  "Usage: butmux notify <message>",
+  "Usage: butmux open"
 ].join("\n");
 
 export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
   const [, , command, agent, event] = argv;
 
   if (!command) {
-    const paths = resolveSeitonPaths(deps.env, deps.platform, deps.home);
+    const paths = resolveButmuxPaths(deps.env, deps.platform, deps.home);
     await deps.renderTui(paths);
     return 0;
   }
@@ -57,13 +57,13 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
       deps.stderr.write("Refusing to add filesystem root as a project: /\n");
       return 1;
     }
-    const appDataDir = resolveSeitonPaths(deps.env, deps.platform, deps.home).stateDir;
+    const appDataDir = resolveButmuxPaths(deps.env, deps.platform, deps.home).stateDir;
     const registry = await deps.loadRegistry(appDataDir);
-    const status = await openProjectInSeiton(deps.cwd, appDataDir, registry, deps);
+    const status = await openProjectInButmux(deps.cwd, appDataDir, registry, deps);
     if (status === "exists") {
-      deps.stdout.write(`Project already exists in Seiton: ${deps.cwd}\n`);
+      deps.stdout.write(`Project already exists in butmux: ${deps.cwd}\n`);
     } else {
-      deps.stdout.write(`Opened ${deps.cwd} in Seiton.\n`);
+      deps.stdout.write(`Opened ${deps.cwd} in butmux.\n`);
     }
     return 0;
   }
@@ -72,7 +72,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
   return 1;
 }
 
-export async function openProjectInSeiton(
+export async function openProjectInButmux(
   cwd: string,
   appDataDir: string,
   registry: Registry,
@@ -91,7 +91,7 @@ export async function openProjectInSeiton(
 
   await deps.saveRegistry(appDataDir, nextRegistry);
   await deps.emitLiveUpdate({
-    agent: "seiton",
+    agent: "butmux",
     event: "open",
     paneId: "cli",
     cwd

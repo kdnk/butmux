@@ -27,7 +27,7 @@ import {
   type TerminalBackendName
 } from "./model";
 import type { TerminalBackend } from "./terminal-backend";
-import { loadConfig, normalizeConfig, saveConfig, type SeitonConfig } from "./config";
+import { loadConfig, normalizeConfig, saveConfig, type ButmuxConfig } from "./config";
 import { loadRegistry, saveRegistry } from "./registry";
 
 export type AppState = {
@@ -58,8 +58,8 @@ export type AppService = {
   removeOrphan(input: RemoveOrphanInput): Promise<AppState>;
   reorderProjects(from: number, to: number): Promise<AppState>;
   reorderContexts(projectRoot: string, from: number, to: number): Promise<AppState>;
-  getSettings(): Promise<SeitonConfig>;
-  updateSettings(input: Partial<SeitonConfig>): Promise<SeitonConfig>;
+  getSettings(): Promise<ButmuxConfig>;
+  updateSettings(input: Partial<ButmuxConfig>): Promise<ButmuxConfig>;
 };
 
 export type AppServiceDeps = {
@@ -398,7 +398,7 @@ export function buildAppState(
   };
 }
 
-export function readTerminalBackendSetting(config: SeitonConfig): TerminalBackendName {
+export function readTerminalBackendSetting(config: ButmuxConfig): TerminalBackendName {
   return config.terminalBackend === "wezterm" ? "wezterm" : "kitty";
 }
 

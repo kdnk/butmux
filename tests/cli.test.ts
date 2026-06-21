@@ -7,7 +7,7 @@ function createDeps(overrides: Partial<Parameters<typeof runCli>[1]> = {}) {
   const outputs = { stdout: [] as string[], stderr: [] as string[] };
   const deps: Parameters<typeof runCli>[1] = {
     cwd: "/repo/a",
-    env: { HOME: "/Users/tester", XDG_STATE_HOME: "/tmp/seiton-state", XDG_CONFIG_HOME: "/tmp/seiton-config" },
+    env: { HOME: "/Users/tester", XDG_STATE_HOME: "/tmp/butmux-state", XDG_CONFIG_HOME: "/tmp/butmux-config" },
     platform: "darwin",
     home: "/Users/tester",
     readStdin: vi.fn().mockResolvedValue(""),
@@ -29,37 +29,37 @@ describe("runCli", () => {
   it("starts the TUI when no subcommand is provided", async () => {
     const { deps } = createDeps();
 
-    const exitCode = await runCli(["node", "seiton"], deps);
+    const exitCode = await runCli(["node", "butmux"], deps);
 
     expect(exitCode).toBe(0);
     expect(deps.renderTui).toHaveBeenCalledWith({
-      configDir: "/tmp/seiton-config/seiton",
-      stateDir: "/tmp/seiton-state/seiton"
+      configDir: "/tmp/butmux-config/butmux",
+      stateDir: "/tmp/butmux-state/butmux"
     });
   });
 
   it("treats symlinked entrypoints as direct CLI execution", () => {
     expect(shouldRunCliMain(
-      "/Users/kodai/.local/bin/seiton",
-      "file:///Users/kodai/workspaces/github.com/kdnk/seiton/dist/cli.js",
+      "/Users/kodai/.local/bin/butmux",
+      "file:///Users/kodai/workspaces/github.com/kdnk/butmux/dist/cli.js",
       (path) => (
-        path === "/Users/kodai/.local/bin/seiton"
-          ? "/Users/kodai/workspaces/github.com/kdnk/seiton/dist/cli.js"
+        path === "/Users/kodai/.local/bin/butmux"
+          ? "/Users/kodai/workspaces/github.com/kdnk/butmux/dist/cli.js"
           : path
       )
     )).toBe(true);
   });
 
-  it("adds the current working directory for seiton open", async () => {
+  it("adds the current working directory for butmux open", async () => {
     const { deps, saved, outputs } = createDeps();
 
-    const exitCode = await runCli(["node", "seiton", "open"], deps);
+    const exitCode = await runCli(["node", "butmux", "open"], deps);
 
     expect(exitCode).toBe(0);
-    expect(deps.loadRegistry).toHaveBeenCalledWith("/tmp/seiton-state/seiton");
+    expect(deps.loadRegistry).toHaveBeenCalledWith("/tmp/butmux-state/butmux");
     expect(deps.saveRegistry).toHaveBeenCalledTimes(1);
     expect(saved[0]).toMatchObject({
-      appDataDir: "/tmp/seiton-state/seiton",
+      appDataDir: "/tmp/butmux-state/butmux",
       registry: {
         projects: [
           expect.objectContaining({
@@ -71,12 +71,12 @@ describe("runCli", () => {
       }
     });
     expect(deps.emitLiveUpdate).toHaveBeenCalledWith({
-      agent: "seiton",
+      agent: "butmux",
       event: "open",
       paneId: "cli",
       cwd: "/repo/a"
     });
-    expect(outputs.stdout.join("")).toContain("Opened /repo/a in Seiton.");
+    expect(outputs.stdout.join("")).toContain("Opened /repo/a in butmux.");
   });
 
   it("does not add the filesystem root as a project", async () => {
@@ -84,7 +84,7 @@ describe("runCli", () => {
       cwd: "/"
     });
 
-    const exitCode = await runCli(["node", "seiton", "open"], deps);
+    const exitCode = await runCli(["node", "butmux", "open"], deps);
 
     expect(exitCode).toBe(1);
     expect(deps.saveRegistry).not.toHaveBeenCalled();
@@ -108,12 +108,12 @@ describe("runCli", () => {
       })
     });
 
-    const exitCode = await runCli(["node", "seiton", "open"], deps);
+    const exitCode = await runCli(["node", "butmux", "open"], deps);
 
     expect(exitCode).toBe(0);
     expect(deps.saveRegistry).not.toHaveBeenCalled();
     expect(deps.emitLiveUpdate).not.toHaveBeenCalled();
-    expect(outputs.stdout.join("")).toContain("Project already exists in Seiton: /repo/a");
+    expect(outputs.stdout.join("")).toContain("Project already exists in butmux: /repo/a");
   });
 
   it("keeps the hook command behavior", async () => {
@@ -121,7 +121,7 @@ describe("runCli", () => {
       readStdin: vi.fn().mockResolvedValue("{\"ok\":true}")
     });
 
-    const exitCode = await runCli(["node", "seiton", "hook", "agent-1", "finish"], deps);
+    const exitCode = await runCli(["node", "butmux", "hook", "agent-1", "finish"], deps);
 
     expect(exitCode).toBe(0);
     expect(deps.applyAgentHook).toHaveBeenCalledWith(
@@ -133,13 +133,13 @@ describe("runCli", () => {
     );
   });
 
-  it("accepts seiton notify and routes it into pane state", async () => {
+  it("accepts butmux notify and routes it into pane state", async () => {
     const notifyCurrentPane = vi.fn().mockResolvedValue(undefined);
     const { deps } = createDeps({
       notifyCurrentPane
     });
 
-    const exitCode = await runCli(["node", "seiton", "notify", "implementation", "finished"], deps);
+    const exitCode = await runCli(["node", "butmux", "notify", "implementation", "finished"], deps);
 
     expect(exitCode).toBe(0);
     expect(notifyCurrentPane).toHaveBeenCalledWith("implementation finished", deps.env, "/repo/a");
@@ -148,11 +148,11 @@ describe("runCli", () => {
   it("prints usage for unsupported commands", async () => {
     const { deps, outputs } = createDeps();
 
-    const exitCode = await runCli(["node", "seiton", "unknown"], deps);
+    const exitCode = await runCli(["node", "butmux", "unknown"], deps);
 
     expect(exitCode).toBe(1);
-    expect(outputs.stderr.join("")).toContain("Usage: seiton hook <agent> <event>");
-    expect(outputs.stderr.join("")).toContain("Usage: seiton notify <message>");
-    expect(outputs.stderr.join("")).toContain("Usage: seiton open");
+    expect(outputs.stderr.join("")).toContain("Usage: butmux hook <agent> <event>");
+    expect(outputs.stderr.join("")).toContain("Usage: butmux notify <message>");
+    expect(outputs.stderr.join("")).toContain("Usage: butmux open");
   });
 });

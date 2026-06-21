@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 
 export function getActivityLogPath(paneId: string): string {
   const safePaneId = paneId.replace(/[^A-Za-z0-9_-]/g, "");
-  return join(tmpdir(), `seiton-activity-${safePaneId}.log`);
+  return join(tmpdir(), `butmux-activity-${safePaneId}.log`);
 }
 
 export async function appendActivityLog(paneId: string, message: string): Promise<void> {

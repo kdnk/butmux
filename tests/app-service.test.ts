@@ -39,7 +39,7 @@ function emptySystemSnapshot(overrides: Partial<SystemSnapshot> = {}): SystemSna
 }
 
 async function createTempService() {
-  tempDir = await mkdtemp(join(tmpdir(), "seiton-service-"));
+  tempDir = await mkdtemp(join(tmpdir(), "butmux-service-"));
   const configDir = join(tempDir, "config");
   const stateDir = join(tempDir, "state");
   const readFullSystemSnapshot = vi.fn(async (roots: string[]) => emptyFullSnapshot(roots));
@@ -133,8 +133,8 @@ describe("createAppService", () => {
           projectRoot: "/repo/a",
           branch: "a",
           branchKey: "a",
-          tmuxSession: "s_a_a",
-          terminalTabTitle: "s_a_a",
+          tmuxSession: "bm_a_a",
+          terminalTabTitle: "bm_a_a",
           order: 10,
           createdAt: "2026-06-22T00:00:00.000Z",
           updatedAt: "2026-06-22T00:00:00.000Z"
@@ -144,8 +144,8 @@ describe("createAppService", () => {
           projectRoot: "/repo/a",
           branch: "b",
           branchKey: "b",
-          tmuxSession: "s_a_b",
-          terminalTabTitle: "s_a_b",
+          tmuxSession: "bm_a_b",
+          terminalTabTitle: "bm_a_b",
           order: 20,
           createdAt: "2026-06-22T00:00:00.000Z",
           updatedAt: "2026-06-22T00:00:00.000Z"
@@ -170,8 +170,8 @@ describe("createAppService", () => {
       contextId: "ctx-a",
       projectRoot: "/repo/a",
       oldBranch: "feature/a",
-      oldTmuxSession: "s_a_feature%2Fa",
-      oldTerminalTabTitle: "s_a_feature%2Fa",
+      oldTmuxSession: "bm_a_feature%2Fa",
+      oldTerminalTabTitle: "bm_a_feature%2Fa",
       newBranch: " "
     })).rejects.toThrow("Branch name cannot be empty");
   });
@@ -182,7 +182,7 @@ describe("createAppService", () => {
     const command: SyncCommand = {
       type: "create_tmux_session",
       branch: "feature/a",
-      tmuxSession: "s_a_feature%2Fa"
+      tmuxSession: "bm_a_feature%2Fa"
     };
     readSystemSnapshotForCwd.mockResolvedValueOnce(emptySystemSnapshot({
       branches: [{ name: "feature/a" }]

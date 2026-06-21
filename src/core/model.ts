@@ -1,5 +1,5 @@
-const MANAGED_PREFIX = "s_";
-const LEGACY_MANAGED_PREFIX = "seiton__";
+const MANAGED_PREFIX = "bm_";
+const LEGACY_MANAGED_PREFIX = "s_";
 
 export type Branch = {
   name: string;
@@ -249,26 +249,26 @@ export function isManagedName(name: string): boolean {
 }
 
 export function branchFromManagedName(name: string): string {
-  if (name.startsWith(LEGACY_MANAGED_PREFIX)) {
-    const rest = name.slice(LEGACY_MANAGED_PREFIX.length);
-    const separator = rest.indexOf("__");
-    if (separator === -1) return decodeBranchKey(rest);
-    return decodeBranchKey(rest.slice(separator + 2));
-  }
-  const rest = name.slice(MANAGED_PREFIX.length);
+  const prefix = managedNamePrefix(name);
+  const rest = prefix ? name.slice(prefix.length) : name;
   const separator = rest.indexOf("_");
   if (separator === -1) return decodeBranchKey(rest);
   return decodeBranchKey(rest.slice(separator + 1));
 }
 
 export function projectKeyFromManagedName(name: string): string | undefined {
-  if (name.startsWith(LEGACY_MANAGED_PREFIX)) {
-    return undefined;
-  }
-  const rest = name.slice(MANAGED_PREFIX.length);
+  const prefix = managedNamePrefix(name);
+  if (!prefix) return undefined;
+  const rest = name.slice(prefix.length);
   const separator = rest.indexOf("_");
   if (separator === -1) return undefined;
   return rest.slice(0, separator);
+}
+
+function managedNamePrefix(name: string): string | undefined {
+  if (name.startsWith(MANAGED_PREFIX)) return MANAGED_PREFIX;
+  if (name.startsWith(LEGACY_MANAGED_PREFIX)) return LEGACY_MANAGED_PREFIX;
+  return undefined;
 }
 
 export type ProjectContexts = {
@@ -391,7 +391,7 @@ export function planSync(input: SyncInput): SyncPlan {
 
     if (context.pendingBranch && context.pendingBranch !== targetBranch) {
       warnings.push(
-        `GitButler branch name overrides pending Seiton rename for ${context.branch}.`
+        `GitButler branch name overrides pending butmux rename for ${context.branch}.`
       );
     }
 

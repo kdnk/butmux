@@ -398,11 +398,11 @@ export async function notifyCurrentPane(
   await writePaneOptions(
     paneId,
     {
-      "@seiton_status": "waiting",
-      "@seiton_prompt": message,
-      "@seiton_cwd": env.PWD?.trim() ?? cwd,
-      "@seiton_attention": "notification",
-      "@seiton_wait_reason": "notification"
+      "@butmux_status": "waiting",
+      "@butmux_prompt": message,
+      "@butmux_cwd": env.PWD?.trim() ?? cwd,
+      "@butmux_attention": "notification",
+      "@butmux_wait_reason": "notification"
     },
     cwd,
     run
@@ -781,15 +781,15 @@ async function readAgentPaneFromTmuxOptions(
   cwd: string,
   run: ExecFunction
 ): Promise<AgentPane | undefined> {
-  const agent = await readPaneOption(pane.paneId, "@seiton_agent", cwd, run);
+  const agent = await readPaneOption(pane.paneId, "@butmux_agent", cwd, run);
   if (agent !== "codex" && agent !== "claude") return undefined;
   if (!isAgentRuntimeActive(agent, pane.currentCommand, pane.startCommand)) {
     return undefined;
   }
 
   const [status, prompt] = await Promise.all([
-    readPaneOption(pane.paneId, "@seiton_status", cwd, run),
-    readPaneOption(pane.paneId, "@seiton_prompt", cwd, run)
+    readPaneOption(pane.paneId, "@butmux_status", cwd, run),
+    readPaneOption(pane.paneId, "@butmux_prompt", cwd, run)
   ]);
 
   const fallbackLine = prompt ? "" : (await readPaneSnapshot(pane.paneId, cwd, run)).lastLine;
@@ -988,44 +988,44 @@ async function applyCodexHook(
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "codex",
-          "@seiton_status": "idle",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd
+          "@butmux_agent": "codex",
+          "@butmux_status": "idle",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd
         },
         cwd,
         run
       );
-      await unsetPaneOptions(paneId, ["@seiton_attention", "@seiton_wait_reason", "@seiton_started_at"], cwd, run);
+      await unsetPaneOptions(paneId, ["@butmux_attention", "@butmux_wait_reason", "@butmux_started_at"], cwd, run);
       return;
     case "user-prompt-submit":
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "codex",
-          "@seiton_status": "running",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd,
-          "@seiton_started_at": new Date().toISOString()
+          "@butmux_agent": "codex",
+          "@butmux_status": "running",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd,
+          "@butmux_started_at": new Date().toISOString()
         },
         cwd,
         run
       );
-      await unsetPaneOptions(paneId, ["@seiton_attention", "@seiton_wait_reason"], cwd, run);
+      await unsetPaneOptions(paneId, ["@butmux_attention", "@butmux_wait_reason"], cwd, run);
       return;
     case "stop":
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "codex",
-          "@seiton_status": "idle",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd
+          "@butmux_agent": "codex",
+          "@butmux_status": "idle",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd
         },
         cwd,
         run
       );
-      await unsetPaneOptions(paneId, ["@seiton_attention", "@seiton_wait_reason", "@seiton_started_at"], cwd, run);
+      await unsetPaneOptions(paneId, ["@butmux_attention", "@butmux_wait_reason", "@butmux_started_at"], cwd, run);
       return;
     default:
       throw new Error(`Unsupported codex event: ${event}`);
@@ -1044,41 +1044,41 @@ async function applyClaudeHook(
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "claude",
-          "@seiton_status": "idle",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd
+          "@butmux_agent": "claude",
+          "@butmux_status": "idle",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd
         },
         cwd,
         run
       );
-      await unsetPaneOptions(paneId, ["@seiton_attention", "@seiton_wait_reason", "@seiton_started_at"], cwd, run);
+      await unsetPaneOptions(paneId, ["@butmux_attention", "@butmux_wait_reason", "@butmux_started_at"], cwd, run);
       return;
     case "user_prompt_submit":
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "claude",
-          "@seiton_status": "running",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd,
-          "@seiton_started_at": new Date().toISOString()
+          "@butmux_agent": "claude",
+          "@butmux_status": "running",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd,
+          "@butmux_started_at": new Date().toISOString()
         },
         cwd,
         run
       );
-      await unsetPaneOptions(paneId, ["@seiton_attention", "@seiton_wait_reason"], cwd, run);
+      await unsetPaneOptions(paneId, ["@butmux_attention", "@butmux_wait_reason"], cwd, run);
       return;
     case "notification":
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "claude",
-          "@seiton_status": "waiting",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd,
-          "@seiton_attention": "notification",
-          "@seiton_wait_reason": "notification"
+          "@butmux_agent": "claude",
+          "@butmux_status": "waiting",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd,
+          "@butmux_attention": "notification",
+          "@butmux_wait_reason": "notification"
         },
         cwd,
         run
@@ -1088,26 +1088,26 @@ async function applyClaudeHook(
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "claude",
-          "@seiton_status": "idle",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd
+          "@butmux_agent": "claude",
+          "@butmux_status": "idle",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd
         },
         cwd,
         run
       );
-      await unsetPaneOptions(paneId, ["@seiton_attention", "@seiton_wait_reason", "@seiton_started_at"], cwd, run);
+      await unsetPaneOptions(paneId, ["@butmux_attention", "@butmux_wait_reason", "@butmux_started_at"], cwd, run);
       return;
     case "stop_failure":
       await writePaneOptions(
         paneId,
         {
-          "@seiton_agent": "claude",
-          "@seiton_status": "error",
-          "@seiton_prompt": input.prompt,
-          "@seiton_cwd": input.cwd,
-          "@seiton_attention": "notification",
-          "@seiton_wait_reason": "stop_failure"
+          "@butmux_agent": "claude",
+          "@butmux_status": "error",
+          "@butmux_prompt": input.prompt,
+          "@butmux_cwd": input.cwd,
+          "@butmux_attention": "notification",
+          "@butmux_wait_reason": "stop_failure"
         },
         cwd,
         run
@@ -1118,13 +1118,13 @@ async function applyClaudeHook(
       return;
     case "session_end":
       await unsetPaneOptions(paneId, [
-        "@seiton_agent",
-        "@seiton_status",
-        "@seiton_prompt",
-        "@seiton_cwd",
-        "@seiton_attention",
-        "@seiton_wait_reason",
-        "@seiton_started_at"
+        "@butmux_agent",
+        "@butmux_status",
+        "@butmux_prompt",
+        "@butmux_cwd",
+        "@butmux_attention",
+        "@butmux_wait_reason",
+        "@butmux_started_at"
       ], cwd, run);
       return;
     default:

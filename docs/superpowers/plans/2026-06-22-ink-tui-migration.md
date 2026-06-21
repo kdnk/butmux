@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace Seiton's Electron app with an Ink terminal UI while preserving core workspace-management and agent-hook behavior.
+**Goal:** Replace butmux's Electron app with an Ink terminal UI while preserving core workspace-management and agent-hook behavior.
 
-**Architecture:** Extract Electron IPC behavior into a UI-agnostic core app service. Route `seiton` without a subcommand to an Ink React TUI, while keeping `hook`, `notify`, and `open` as non-interactive subcommands. Store user settings in XDG config and registry state in XDG state.
+**Architecture:** Extract Electron IPC behavior into a UI-agnostic core app service. Route `butmux` without a subcommand to an Ink React TUI, while keeping `hook`, `notify`, and `open` as non-interactive subcommands. Store user settings in XDG config and registry state in XDG state.
 
 **Tech Stack:** TypeScript, React 19, Ink 7, esbuild, Vitest, GitButler CLI, tmux, Kitty/WezTerm terminal backends.
 
@@ -15,7 +15,9 @@
 - Follow Conventional Commits with English commit messages and Why/What descriptions.
 - Electron data migration is out of scope; ignore legacy Electron app data.
 - Mouse support is not required; drag/drop is replaced by keyboard reorder.
-- `seiton hook <agent> <event>`, `seiton notify <message>`, and `seiton open` must keep working.
+- `butmux hook <agent> <event>`, `butmux notify <message>`, and `butmux open` must keep working.
+- New managed tmux sessions use `bm_<project-slug>_<branch-key>`; existing `s_` sessions are recognized as legacy managed names.
+- Agent hook pane options use `@butmux_*`.
 - `npm test` and `npm run build` must pass before completion.
 
 ---
@@ -30,8 +32,8 @@
 - Test: `tests/registry.test.ts`
 
 **Interfaces:**
-- Produces: `resolveSeitonPaths(env, platform, home): SeitonPaths`
-- Produces: `loadConfig(configDir): Promise<SeitonConfig>`
+- Produces: `resolveButmuxPaths(env, platform, home): ButmuxPaths`
+- Produces: `loadConfig(configDir): Promise<ButmuxConfig>`
 - Produces: `saveConfig(configDir, config): Promise<void>`
 - Produces: `loadRegistry(stateDir): Promise<Registry>`
 - Produces: `saveRegistry(stateDir, registry): Promise<void>`
@@ -41,10 +43,10 @@
 Add tests that expect:
 
 ```ts
-resolveSeitonPaths({ XDG_CONFIG_HOME: "/cfg", XDG_STATE_HOME: "/state" }, "linux", "/home/u")
+resolveButmuxPaths({ XDG_CONFIG_HOME: "/cfg", XDG_STATE_HOME: "/state" }, "linux", "/home/u")
 ```
 
-to produce `/cfg/seiton` and `/state/seiton`, and that missing config loads `{ terminalBackend: "kitty" }`.
+to produce `/cfg/butmux` and `/state/butmux`, and that missing config loads `{ terminalBackend: "kitty" }`.
 
 - [ ] **Step 2: Run the new tests and verify they fail**
 
@@ -98,7 +100,7 @@ Run: `npm test -- tests/app-service.test.ts tests/core.test.ts`
 - Test: `tests/cli.test.ts`
 
 **Interfaces:**
-- Consumes: `resolveSeitonPaths`, `createAppService`
+- Consumes: `resolveButmuxPaths`, `createAppService`
 - Produces: `runCli(argv, deps): Promise<number>` where no subcommand calls `deps.renderTui`
 
 - [ ] **Step 1: Write failing CLI tests**

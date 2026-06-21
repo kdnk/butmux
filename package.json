@@ -1,12 +1,12 @@
 {
-  "name": "seiton",
+  "name": "butmux",
   "version": "0.2.8",
-  "description": "Seiton - Terminal workspace manager for GitButler, tmux, and Kitty",
+  "description": "butmux - Terminal workspace manager for GitButler, tmux, and Kitty",
   "author": "Kodai Nakamura",
   "private": true,
   "type": "module",
   "bin": {
-    "seiton": "dist/cli.js"
+    "butmux": "dist/cli.js"
   },
   "scripts": {
     "dev": "npm run build:cli",

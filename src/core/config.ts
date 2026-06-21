@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { TerminalBackendName } from "./model";
 
-export type SeitonConfig = {
+export type ButmuxConfig = {
   terminalBackend: TerminalBackendName;
 };
 
@@ -10,10 +10,10 @@ export function configPath(configDir: string): string {
   return join(configDir, "config.json");
 }
 
-export async function loadConfig(configDir: string): Promise<SeitonConfig> {
+export async function loadConfig(configDir: string): Promise<ButmuxConfig> {
   try {
     const raw = await readFile(configPath(configDir), "utf8");
-    const parsed = JSON.parse(raw) as Partial<SeitonConfig>;
+    const parsed = JSON.parse(raw) as Partial<ButmuxConfig>;
     return normalizeConfig(parsed);
   } catch (error) {
     if (isMissingFile(error)) {
@@ -23,16 +23,16 @@ export async function loadConfig(configDir: string): Promise<SeitonConfig> {
   }
 }
 
-export async function saveConfig(configDir: string, config: SeitonConfig): Promise<void> {
+export async function saveConfig(configDir: string, config: ButmuxConfig): Promise<void> {
   await mkdir(configDir, { recursive: true });
   await writeFile(configPath(configDir), `${JSON.stringify(normalizeConfig(config), null, 2)}\n`);
 }
 
-export function defaultConfig(): SeitonConfig {
+export function defaultConfig(): ButmuxConfig {
   return { terminalBackend: "kitty" };
 }
 
-export function normalizeConfig(input: Partial<SeitonConfig>): SeitonConfig {
+export function normalizeConfig(input: Partial<ButmuxConfig>): ButmuxConfig {
   return {
     terminalBackend: input.terminalBackend === "wezterm" ? "wezterm" : "kitty"
   };
