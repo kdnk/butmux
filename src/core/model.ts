@@ -1,5 +1,4 @@
 const MANAGED_PREFIX = "bm_";
-const LEGACY_MANAGED_PREFIX = "s_";
 
 export type Branch = {
   name: string;
@@ -245,30 +244,22 @@ export function removeProject(input: RemoveProjectInput): Registry {
 }
 
 export function isManagedName(name: string): boolean {
-  return name.startsWith(MANAGED_PREFIX) || name.startsWith(LEGACY_MANAGED_PREFIX);
+  return name.startsWith(MANAGED_PREFIX);
 }
 
 export function branchFromManagedName(name: string): string {
-  const prefix = managedNamePrefix(name);
-  const rest = prefix ? name.slice(prefix.length) : name;
+  const rest = name.startsWith(MANAGED_PREFIX) ? name.slice(MANAGED_PREFIX.length) : name;
   const separator = rest.indexOf("_");
   if (separator === -1) return decodeBranchKey(rest);
   return decodeBranchKey(rest.slice(separator + 1));
 }
 
 export function projectKeyFromManagedName(name: string): string | undefined {
-  const prefix = managedNamePrefix(name);
-  if (!prefix) return undefined;
-  const rest = name.slice(prefix.length);
+  if (!name.startsWith(MANAGED_PREFIX)) return undefined;
+  const rest = name.slice(MANAGED_PREFIX.length);
   const separator = rest.indexOf("_");
   if (separator === -1) return undefined;
   return rest.slice(0, separator);
-}
-
-function managedNamePrefix(name: string): string | undefined {
-  if (name.startsWith(MANAGED_PREFIX)) return MANAGED_PREFIX;
-  if (name.startsWith(LEGACY_MANAGED_PREFIX)) return LEGACY_MANAGED_PREFIX;
-  return undefined;
 }
 
 export type ProjectContexts = {

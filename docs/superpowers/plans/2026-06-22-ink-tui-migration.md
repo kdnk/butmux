@@ -16,7 +16,7 @@
 - Electron data migration is out of scope; ignore legacy Electron app data.
 - Mouse support is not required; drag/drop is replaced by keyboard reorder.
 - `butmux hook <agent> <event>`, `butmux notify <message>`, and `butmux open` must keep working.
-- New managed tmux sessions use `bm_<project-slug>_<branch-key>`; existing `s_` sessions are recognized as legacy managed names.
+- Managed tmux sessions use `bm_<project-slug>_<branch-key>`.
 - Agent hook pane options use `@butmux_*`.
 - `npm test` and `npm run build` must pass before completion.
 

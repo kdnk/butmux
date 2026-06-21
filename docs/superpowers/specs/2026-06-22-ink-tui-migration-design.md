@@ -240,8 +240,6 @@ New managed tmux sessions and terminal tabs use:
 bm_<project-slug>_<branch-key>
 ```
 
-The core model still recognizes existing `s_` managed sessions as legacy names for detection and orphan cleanup.
-
 Agent hook pane options use `@butmux_*`.
 
 ## Error Handling

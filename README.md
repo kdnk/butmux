@@ -131,8 +131,6 @@ Managed names use this shape:
 bm_<project-slug>_<branch-key>
 ```
 
-Existing `s_` managed session names are still recognized as legacy sessions for detection and cleanup.
-
 Examples:
 
 - `git-butler-practice` + `butmux-parser-test` -> `bm_gbp_butmux-parser-test`

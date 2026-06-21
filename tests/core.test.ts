@@ -310,7 +310,7 @@ describe("context detection", () => {
     ]);
   });
 
-  it("recognizes legacy managed session names for orphan detection", () => {
+  it("ignores old s_ session names during orphan detection", () => {
     const contexts = detectContexts({
       projectRoot: "/repo/a",
       branches: [],
@@ -320,12 +320,7 @@ describe("context detection", () => {
       registry
     });
 
-    expect(contexts).toMatchObject([
-      {
-        branch: "feature/notify-ui",
-        status: "orphan_tmux"
-      }
-    ]);
+    expect(contexts).toEqual([]);
   });
 
   it("isolates registry contexts by project directory", () => {
