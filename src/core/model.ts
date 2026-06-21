@@ -8,10 +8,6 @@ export type Branch = {
 
 export type TerminalBackendName = "kitty" | "wezterm";
 
-export type RegistrySettings = {
-  terminalBackend: TerminalBackendName;
-};
-
 export type RegistryContext = {
   id: string;
   projectRoot: string;
@@ -37,7 +33,6 @@ export type RegistryProject = {
 };
 
 export type Registry = {
-  settings?: RegistrySettings;
   projects?: RegistryProject[];
   contexts: RegistryContext[];
 };
@@ -396,7 +391,7 @@ export function planSync(input: SyncInput): SyncPlan {
 
     if (context.pendingBranch && context.pendingBranch !== targetBranch) {
       warnings.push(
-        `GitButler branch name overrides pending Electron rename for ${context.branch}.`
+        `GitButler branch name overrides pending Seiton rename for ${context.branch}.`
       );
     }
 

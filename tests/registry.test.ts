@@ -18,7 +18,6 @@ describe("registry persistence", () => {
     tempDir = await mkdtemp(join(tmpdir(), "seiton-registry-"));
 
     await expect(loadRegistry(tempDir)).resolves.toEqual({
-      settings: { terminalBackend: "kitty" },
       projects: [],
       contexts: []
     });
@@ -112,7 +111,6 @@ describe("registry persistence", () => {
     });
 
     await expect(loadRegistry(tempDir)).resolves.toEqual({
-      settings: { terminalBackend: "kitty" },
       projects: [
         expect.objectContaining({ root: "/repo/a", order: 10 })
       ],
@@ -152,7 +150,6 @@ describe("registry persistence", () => {
     });
 
     await expect(loadRegistry(tempDir)).resolves.toMatchObject({
-      settings: { terminalBackend: "kitty" },
       contexts: [
         expect.objectContaining({
           id: "ctx-legacy",

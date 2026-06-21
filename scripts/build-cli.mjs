@@ -1,7 +1,7 @@
 import { chmod } from 'node:fs/promises';
 import { build } from 'esbuild';
 
-const outfile = 'dist-electron/cli.js';
+const outfile = 'dist/cli.js';
 
 await build({
   entryPoints: ['src/cli.ts'],

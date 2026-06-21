@@ -1915,7 +1915,7 @@ describe("sync planning", () => {
             branch: "feature/old-name",
             branchKey: "feature%2Fold-name",
             branchId: "branch-1",
-            pendingBranch: "feature/electron-name",
+            pendingBranch: "feature/seiton-name",
             tmuxSession: "s_a_feature%2Fold-name",
             terminalTabTitle: "s_a_feature%2Fold-name",
             order: 10,
@@ -1936,7 +1936,7 @@ describe("sync planning", () => {
     });
     expect(plan.registryUpdates[0]).not.toHaveProperty("pendingBranch");
     expect(plan.warnings).toContain(
-      "GitButler branch name overrides pending Electron rename for feature/old-name."
+      "GitButler branch name overrides pending Seiton rename for feature/old-name."
     );
   });
 });

@@ -7,8 +7,9 @@ function createDeps(overrides: Partial<Parameters<typeof runCli>[1]> = {}) {
   const outputs = { stdout: [] as string[], stderr: [] as string[] };
   const deps: Parameters<typeof runCli>[1] = {
     cwd: "/repo/a",
-    env: { HOME: "/Users/tester", SEITON_APP_DATA_DIR: "/tmp/seiton-app-data" },
+    env: { HOME: "/Users/tester", XDG_STATE_HOME: "/tmp/seiton-state", XDG_CONFIG_HOME: "/tmp/seiton-config" },
     platform: "darwin",
+    home: "/Users/tester",
     readStdin: vi.fn().mockResolvedValue(""),
     applyAgentHook: vi.fn().mockResolvedValue(undefined),
     notifyCurrentPane: vi.fn().mockResolvedValue(undefined),
@@ -17,6 +18,7 @@ function createDeps(overrides: Partial<Parameters<typeof runCli>[1]> = {}) {
       saved.push({ appDataDir, registry });
     }),
     emitLiveUpdate: vi.fn().mockResolvedValue(undefined),
+    renderTui: vi.fn().mockResolvedValue(undefined),
     stdout: { write: (line: string) => void outputs.stdout.push(line) },
     stderr: { write: (line: string) => void outputs.stderr.push(line) }
   };
@@ -24,13 +26,25 @@ function createDeps(overrides: Partial<Parameters<typeof runCli>[1]> = {}) {
 }
 
 describe("runCli", () => {
+  it("starts the TUI when no subcommand is provided", async () => {
+    const { deps } = createDeps();
+
+    const exitCode = await runCli(["node", "seiton"], deps);
+
+    expect(exitCode).toBe(0);
+    expect(deps.renderTui).toHaveBeenCalledWith({
+      configDir: "/tmp/seiton-config/seiton",
+      stateDir: "/tmp/seiton-state/seiton"
+    });
+  });
+
   it("treats symlinked entrypoints as direct CLI execution", () => {
     expect(shouldRunCliMain(
       "/Users/kodai/.local/bin/seiton",
-      "file:///Users/kodai/workspaces/github.com/kdnk/seiton/dist-electron/cli.js",
+      "file:///Users/kodai/workspaces/github.com/kdnk/seiton/dist/cli.js",
       (path) => (
         path === "/Users/kodai/.local/bin/seiton"
-          ? "/Users/kodai/workspaces/github.com/kdnk/seiton/dist-electron/cli.js"
+          ? "/Users/kodai/workspaces/github.com/kdnk/seiton/dist/cli.js"
           : path
       )
     )).toBe(true);
@@ -42,10 +56,10 @@ describe("runCli", () => {
     const exitCode = await runCli(["node", "seiton", "open"], deps);
 
     expect(exitCode).toBe(0);
-    expect(deps.loadRegistry).toHaveBeenCalledWith("/tmp/seiton-app-data");
+    expect(deps.loadRegistry).toHaveBeenCalledWith("/tmp/seiton-state/seiton");
     expect(deps.saveRegistry).toHaveBeenCalledTimes(1);
     expect(saved[0]).toMatchObject({
-      appDataDir: "/tmp/seiton-app-data",
+      appDataDir: "/tmp/seiton-state/seiton",
       registry: {
         projects: [
           expect.objectContaining({
