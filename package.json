@@ -1,6 +1,6 @@
 {
   "name": "butmux",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "butmux - Terminal workspace manager for GitButler, tmux, and Kitty",
   "author": "Kodai Nakamura",
   "type": "module",
