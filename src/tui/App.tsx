@@ -2,21 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import type { AppService, AppState } from "../core/app-service";
 import { watchLiveUpdates } from "../core/live-updates";
-import type { AgentPane, Context, ProjectContexts, WorkspaceSession } from "../core/model";
+import type { AgentPane, Context, ProjectContexts } from "../core/model";
 import { helpRows } from "./keymap";
 import { startDebouncedLiveRefresh } from "./live-refresh";
+import {
+  buildContextRows,
+  createBranchPrompt,
+  detailTitle,
+  readAgentPanes,
+  statusColor,
+  type BranchPromptState,
+  type ContextRow
+} from "./rows";
 import { clampSelection, moveSelection, switchPane, toReorderIntent, type TuiPane } from "./state";
 
 type PromptState =
   | { type: "add-project"; value: string }
+  | BranchPromptState
   | { type: "rename-context"; value: string; context: Context }
   | { type: "confirm-remove-project"; projectRoot: string }
   | { type: "confirm-remove-orphan"; context: Context };
-
-type ContextRow =
-  | { type: "workspace"; label: string; workspace: WorkspaceSession }
-  | { type: "workspace-missing"; label: string; projectRoot: string }
-  | { type: "context"; label: string; context: Context };
 
 const emptyState: AppState = {
   projectsWithContexts: [],
@@ -116,6 +121,11 @@ export function TuiApp({ service }: { service: AppService }) {
       setPrompt({ type: "add-project", value: "" });
       return;
     }
+    if (input === "b" || input === "B") {
+      const branchPrompt = createBranchPrompt(input, selectedProject, selectedContextRow);
+      if (branchPrompt) setPrompt(branchPrompt);
+      return;
+    }
     if (input === "n") {
       if (selectedContextRow?.type === "context") {
         setPrompt({
@@ -180,6 +190,18 @@ export function TuiApp({ service }: { service: AppService }) {
       const root = current.value.trim();
       if (!root) return;
       await runAction("adding project", async () => await service.addProjectRoot(root));
+      return;
+    }
+    if (current.type === "create-branch") {
+      await runAction("creating branch", async () => {
+        const next = await service.createBranch({
+          projectRoot: current.projectRoot,
+          name: current.value,
+          ...(current.mode === "dependent" ? { anchor: current.anchor } : {})
+        });
+        setLastSync(`created ${next.branchName}; synced ${next.commands.length} commands`);
+        return next;
+      });
       return;
     }
     if (current.type === "rename-context") {
@@ -420,52 +442,17 @@ function PromptView({ prompt }: { prompt: PromptState }) {
   if (prompt.type === "confirm-remove-orphan") {
     return <Text color="yellow">Press Enter to remove orphan {prompt.context.branch}, Esc to cancel.</Text>;
   }
+  if (prompt.type === "create-branch") {
+    return (
+      <Box flexDirection="column">
+        <Text color="yellow">{prompt.mode === "dependent" ? "New dependent GitButler branch" : "New GitButler branch"}</Text>
+        {prompt.mode === "dependent" ? <Text>Anchor: {prompt.anchorLabel}</Text> : <Text>Type: independent</Text>}
+        <Text>Name: {prompt.value}</Text>
+      </Box>
+    );
+  }
   const label = prompt.type === "add-project" ? "Project path" : "New branch";
   return <Text color="yellow">{label}: {prompt.value}</Text>;
-}
-
-function buildContextRows(project: ProjectContexts | undefined): ContextRow[] {
-  if (!project) return [];
-  const workspaceRow: ContextRow = project.workspaceSession
-    ? {
-        type: "workspace",
-        label: `workspace session  ${project.workspaceSession.status}`,
-        workspace: project.workspaceSession
-      }
-    : {
-        type: "workspace-missing",
-        label: "workspace session  missing",
-        projectRoot: project.project.root
-      };
-  return [
-    workspaceRow,
-    ...project.contexts.map((context) => ({
-      type: "context" as const,
-      label: `${context.branch}  ${context.status}${context.agentPanes.length > 0 ? `  ${context.agentPanes.length} agent` : ""}`,
-      context
-    }))
-  ];
-}
-
-function statusColor(row: ContextRow): "green" | "yellow" | "red" | "white" {
-  const status = row.type === "context" ? row.context.status : row.type === "workspace" ? row.workspace.status : "missing_tmux";
-  if (status === "ready") return "green";
-  if (status === "missing_tmux" || status === "missing_terminal") return "yellow";
-  if (status === "orphan_tmux" || status === "error") return "red";
-  return "white";
-}
-
-function detailTitle(row: ContextRow): string {
-  if (row.type === "workspace") return `Workspace: ${row.workspace.name} (${row.workspace.status})`;
-  if (row.type === "workspace-missing") return "Workspace session is missing";
-  return `${row.context.branch} (${row.context.status})`;
-}
-
-function readAgentPanes(row: ContextRow | undefined): AgentPane[] {
-  if (!row) return [];
-  if (row.type === "workspace") return row.workspace.agentPanes;
-  if (row.type === "context") return row.context.agentPanes;
-  return [];
 }
 
 function agentColor(pane: AgentPane): "green" | "yellow" | "red" | "white" {
