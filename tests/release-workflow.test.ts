@@ -18,7 +18,8 @@ describe("npm publish workflow", () => {
     expect(workflow).toContain("npm ci");
     expect(workflow).toContain("npm run build");
     expect(workflow).toContain("npm publish --access public --provenance");
-    expect(workflow).toContain("NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}");
+    expect(workflow).not.toContain("NODE_AUTH_TOKEN");
+    expect(workflow).not.toContain("NPM_TOKEN");
   });
 
   it("allows the package to be published to npm", () => {
