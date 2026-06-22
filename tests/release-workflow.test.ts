@@ -13,6 +13,8 @@ describe("npm publish workflow", () => {
     expect(workflow).toContain("- '*'");
     expect(workflow).toContain("contents: read");
     expect(workflow).toContain("id-token: write");
+    expect(workflow).toContain("actions/checkout@v6");
+    expect(workflow).toContain("actions/setup-node@v6");
     expect(workflow).toContain("node-version: '24'");
     expect(workflow).toContain("registry-url: 'https://registry.npmjs.org'");
     expect(workflow).toContain("npm ci");
