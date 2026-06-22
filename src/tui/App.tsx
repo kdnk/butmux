@@ -3,7 +3,8 @@ import { Box, Text, useApp, useInput } from "ink";
 import type { AppService, AppState } from "../core/app-service";
 import { watchLiveUpdates } from "../core/live-updates";
 import type { AgentPane, Context, ProjectContexts } from "../core/model";
-import { helpRows } from "./keymap";
+import { helpRows, keyHintsForContext } from "./keymap";
+import { ActivityStrip, KeyBar, PaneFrame, Shell } from "./layout";
 import { startDebouncedLiveRefresh } from "./live-refresh";
 import {
   buildContextRows,
@@ -14,7 +15,7 @@ import {
   type BranchPromptState,
   type ContextRow
 } from "./rows";
-import { clampSelection, moveSelection, switchPane, toReorderIntent, type TuiPane } from "./state";
+import { clampSelection, cyclePane, moveSelection, switchPane, toReorderIntent, type TuiPane } from "./state";
 
 type PromptState =
   | { type: "add-project"; value: string }
@@ -43,6 +44,12 @@ export function TuiApp({ service }: { service: AppService }) {
   const selectedProject = state.projectsWithContexts[projectIndex];
   const contextRows = useMemo(() => buildContextRows(selectedProject), [selectedProject]);
   const selectedContextRow = contextRows[contextIndex];
+  const keyHints = keyHintsForContext({
+    pane,
+    hasProject: Boolean(selectedProject),
+    hasContext: Boolean(selectedContextRow),
+    hasManagedContext: selectedContextRow?.type === "context"
+  });
 
   async function runAction(label: string, action: () => Promise<AppState | void>) {
     setBusy(label);
@@ -91,6 +98,10 @@ export function TuiApp({ service }: { service: AppService }) {
     }
     if (input === "?") {
       setHelpOpen((open) => !open);
+      return;
+    }
+    if (key.tab) {
+      setPane((current) => cyclePane(current, key.shift ? -1 : 1));
       return;
     }
     if (key.leftArrow || input === "h") {
@@ -307,9 +318,11 @@ export function TuiApp({ service }: { service: AppService }) {
   }
 
   return (
-    <Box flexDirection="column">
-      <Header busy={busy} lastSync={lastSync} />
-      {error ? <Text color="red">Error: {error}</Text> : null}
+    <Shell
+      header={<Header busy={busy} lastSync={lastSync} />}
+      activity={<ActivityStrip error={error} busy={busy} lastSync={lastSync} warnings={state.warnings} />}
+      keyBar={<KeyBar rows={keyHints} />}
+    >
       <Box gap={2}>
         <ProjectsPane
           active={pane === "projects"}
@@ -330,7 +343,7 @@ export function TuiApp({ service }: { service: AppService }) {
       </Box>
       {helpOpen ? <HelpOverlay /> : null}
       {prompt ? <PromptView prompt={prompt} /> : null}
-    </Box>
+    </Shell>
   );
 }
 
@@ -358,15 +371,14 @@ function ProjectsPane({
   selectedIndex: number;
 }) {
   return (
-    <Box flexDirection="column" width="25%">
-      <Text bold color={active ? "cyan" : "white"}>Projects</Text>
+    <PaneFrame title="Projects" active={active} width="25%">
       {projects.length === 0 ? <Text dimColor>No projects</Text> : null}
       {projects.map((project, index) => (
         <Text key={project.project.root} color={index === selectedIndex ? "cyan" : "white"}>
           {index === selectedIndex ? "> " : "  "}{project.project.name}
         </Text>
       ))}
-    </Box>
+    </PaneFrame>
   );
 }
 
@@ -380,15 +392,14 @@ function ContextsPane({
   selectedIndex: number;
 }) {
   return (
-    <Box flexDirection="column" width="40%">
-      <Text bold color={active ? "cyan" : "white"}>Contexts</Text>
+    <PaneFrame title="Contexts" active={active} width="40%">
       {rows.length === 0 ? <Text dimColor>No contexts</Text> : null}
       {rows.map((row, index) => (
         <Text key={`${row.type}:${row.label}`} color={index === selectedIndex ? "cyan" : statusColor(row)}>
           {index === selectedIndex ? "> " : "  "}{row.label}
         </Text>
       ))}
-    </Box>
+    </PaneFrame>
   );
 }
 
@@ -405,8 +416,7 @@ function DetailPane({
 }) {
   const panes = readAgentPanes(row);
   return (
-    <Box flexDirection="column" flexGrow={1}>
-      <Text bold color={active ? "cyan" : "white"}>Detail</Text>
+    <PaneFrame title="Detail" active={active} flexGrow={1}>
       {state.warnings.map((warning, index) => (
         <Text key={`global-warning-${index}`} color="yellow">! {warning}</Text>
       ))}
@@ -420,7 +430,7 @@ function DetailPane({
           {pane.agent} {pane.paneId} {pane.status} {pane.lastLine}
         </Text>
       ))}
-    </Box>
+    </PaneFrame>
   );
 }
 

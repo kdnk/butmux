@@ -74,4 +74,20 @@ describe("TUI state helpers", () => {
       hasManagedContext: false
     })).not.toContainEqual(["B", "branch from selected"]);
   });
+
+  it("keeps branch hints out of disabled states", () => {
+    expect(keyHintsForContext({
+      pane: "projects",
+      hasProject: false,
+      hasContext: false,
+      hasManagedContext: false
+    })).not.toContainEqual(["b", "new branch"]);
+
+    expect(keyHintsForContext({
+      pane: "contexts",
+      hasProject: true,
+      hasContext: true,
+      hasManagedContext: false
+    })).not.toContainEqual(["B", "branch from selected"]);
+  });
 });
