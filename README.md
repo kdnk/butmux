@@ -5,6 +5,7 @@ butmux is a terminal UI for managing GitButler branches as real tmux and termina
 It gives you one place to:
 
 - add and switch project directories
+- create independent or dependent GitButler branches from the TUI
 - sync GitButler branches into managed tmux sessions and terminal tabs
 - focus a context, workspace session, or agent pane
 - rename contexts across GitButler, tmux, and the selected terminal backend
@@ -64,10 +65,13 @@ butmux open
 ```text
 j/k or Up/Down     move selection
 h/l or Left/Right  switch pane
+Tab / Shift+Tab     cycle panes
 Enter              focus selected workspace, context, or pane
 r                  refresh
 s                  sync selected project
 a                  add project path
+b                   create independent branch
+B                   create dependent branch from selected context
 n                  rename selected managed context
 x                  remove selected project or orphan context after confirmation
 c                  create selected project's workspace session
@@ -76,6 +80,26 @@ c                  create selected project's workspace session
 ?                  show help
 q or Ctrl+C        quit
 ```
+
+## Branch Creation
+
+Use `b` to create a new independent GitButler branch for the selected project.
+butmux runs:
+
+```text
+but branch new <name>
+```
+
+Use `B` from a managed context row to create a dependent branch anchored to the
+selected branch. butmux uses the selected GitButler branch id when available and
+falls back to the branch name. It runs:
+
+```text
+but branch new <name> -a <anchor>
+```
+
+After creation, butmux syncs the project so the new branch gets its managed
+context, tmux session, and terminal tab.
 
 ## Configuration
 
@@ -310,3 +334,5 @@ Specs and plans:
 
 - [Ink TUI migration design](./docs/superpowers/specs/2026-06-22-ink-tui-migration-design.md)
 - [Ink TUI migration plan](./docs/superpowers/plans/2026-06-22-ink-tui-migration.md)
+- [Lazy-inspired TUI design](./docs/superpowers/specs/2026-06-22-lazy-inspired-tui-design.md)
+- [Lazy-inspired TUI plan](./docs/superpowers/plans/2026-06-22-lazy-inspired-tui.md)
