@@ -189,66 +189,114 @@ Pane status values:
 - `waiting`
 - `error`
 
-## Codex Hooks
+## Plugin Hook Setup
 
-Enable hooks in `~/.codex/config.toml`:
+butmux provides Codex and Claude Code plugins in this repository. The plugins
+install lifecycle hooks that call `butmux hook <agent> <event>` without butmux
+editing your personal `~/.codex` or `~/.claude` settings files directly.
 
-```toml
-[features]
-hooks = true
+Install the butmux CLI first:
+
+```bash
+npm install -g butmux
 ```
 
-Add commands to `~/.codex/hooks.json`:
+For local development, `npm link` is also fine as long as `butmux` resolves on
+`PATH`:
 
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "butmux hook codex session-start"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "butmux hook codex user-prompt-submit"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "butmux hook codex stop"
-          }
-        ]
-      }
-    ]
-  }
-}
+```bash
+command -v butmux
 ```
 
-If `butmux` is not on `PATH`, use an absolute checkout path:
+If `butmux` is not on `PATH`, set `BUTMUX_BIN` to an executable path before
+starting Codex or Claude Code:
 
-```json
-{
-  "type": "command",
-  "command": "cd /ABS/PATH/TO/BUTMUX && ./dist/cli.js hook codex stop"
-}
+```bash
+export BUTMUX_BIN=/absolute/path/to/butmux
 ```
 
-## Claude Hooks
+### Codex Plugin
 
-Claude hooks call the same CLI entrypoint with `claude` as the agent name:
+The Codex marketplace file is:
+
+```text
+.agents/plugins/marketplace.json
+```
+
+Install the `codex-butmux` plugin from the `butmux` marketplace in Codex, then
+start a new Codex session. Use `/hooks` in Codex to review and trust the plugin
+hooks if Codex asks for hook review.
+
+The plugin provides:
+
+```text
+SessionStart      -> butmux hook codex session-start
+UserPromptSubmit  -> butmux hook codex user-prompt-submit
+Stop              -> butmux hook codex stop
+```
+
+### Claude Code Plugin
+
+The Claude Code marketplace file is:
+
+```text
+.claude-plugin/marketplace.json
+```
+
+Add this repository as a Claude Code plugin marketplace, install
+`claude-butmux`, then run `/reload-plugins` or start a new Claude Code session.
+Use `/hooks` in Claude Code to inspect the installed hook definitions.
+
+The plugin provides:
+
+```text
+SessionStart      -> butmux hook claude session-start
+UserPromptSubmit  -> butmux hook claude user-prompt-submit
+Notification      -> butmux hook claude notification
+Stop              -> butmux hook claude stop
+StopFailure       -> butmux hook claude stop-failure
+PostToolUse       -> butmux hook claude post-tool-use
+SessionEnd        -> butmux hook claude session-end
+```
+
+### Verify Hook Status
+
+Run Codex or Claude Code inside a tmux pane, then start or resume a session. The
+plugin hooks intentionally no-op when `TMUX_PANE` is missing, so sessions outside
+tmux will not update butmux pane state.
+
+In another pane, open:
+
+```bash
+butmux
+```
+
+The selected context should show the active Codex or Claude pane after the first
+hook event fires.
+
+### Troubleshooting Hooks
+
+- Check `command -v butmux`, or set `BUTMUX_BIN`.
+- Confirm the agent session is running inside tmux so `TMUX_PANE` is present.
+- Open `/hooks` in Codex or Claude Code and confirm the plugin hooks are enabled
+  and trusted.
+- Check whether hooks are disabled by user, project, or managed policy.
+- Confirm the plugin is installed and enabled.
+
+## Manual Hook Reference
+
+The plugin setup above is preferred. Manual hook configuration is still possible
+if you do not want to use plugins.
+
+Codex commands:
+
+```text
+butmux hook codex session-start
+butmux hook codex user-prompt-submit
+butmux hook codex stop
+```
+
+Claude Code commands:
 
 ```text
 butmux hook claude session-start
@@ -259,8 +307,6 @@ butmux hook claude stop-failure
 butmux hook claude post-tool-use
 butmux hook claude session-end
 ```
-
-Add matching commands to `~/.claude/settings.json` or a project-local `.claude/settings.json`.
 
 ## Manual Notifications
 
