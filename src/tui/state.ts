@@ -10,6 +10,12 @@ export function switchPane(current: TuiPane, direction: Direction): TuiPane {
   return panes[Math.max(0, Math.min(panes.length - 1, nextIndex))] ?? current;
 }
 
+export function cyclePane(current: TuiPane, direction: -1 | 1): TuiPane {
+  const index = panes.indexOf(current);
+  const nextIndex = (index + direction + panes.length) % panes.length;
+  return panes[nextIndex] ?? current;
+}
+
 export function moveSelection(current: number, delta: number, itemCount: number): number {
   if (itemCount <= 0) return 0;
   return Math.max(0, Math.min(itemCount - 1, current + delta));
