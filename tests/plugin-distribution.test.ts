@@ -81,6 +81,8 @@ describe("plugin distribution artifacts", () => {
         longDescription: string;
         developerName: string;
         category: string;
+        capabilities: string[];
+        defaultPrompt: string[];
       };
       hooks?: unknown;
     }>("plugins/codex-butmux/.codex-plugin/plugin.json");
@@ -92,7 +94,9 @@ describe("plugin distribution artifacts", () => {
     expect(manifest.interface).toMatchObject({
       displayName: "butmux for Codex",
       developerName: "Kodai Nakamura",
-      category: "Productivity"
+      category: "Productivity",
+      capabilities: ["Hooks"],
+      defaultPrompt: ["Install butmux Codex hooks."]
     });
     expect(manifest.interface.shortDescription).toContain("Codex");
     expect(manifest.interface.longDescription).toContain("butmux");

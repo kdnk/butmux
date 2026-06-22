@@ -12,6 +12,8 @@
     "shortDescription": "Send Codex pane status to butmux.",
     "longDescription": "Installs Codex lifecycle hooks that call butmux hook codex events so butmux can show Codex pane state in tmux-backed work contexts.",
     "developerName": "Kodai Nakamura",
-    "category": "Productivity"
+    "category": "Productivity",
+    "capabilities": ["Hooks"],
+    "defaultPrompt": ["Install butmux Codex hooks."]
   }
 }
