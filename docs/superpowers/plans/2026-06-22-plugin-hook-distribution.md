@@ -141,7 +141,7 @@ describe("plugin distribution artifacts", () => {
     }>("plugins/codex-butmux/.codex-plugin/plugin.json");
 
     expect(manifest.name).toBe("codex-butmux");
-    expect(manifest.version).toMatch(/^\\d+\\.\\d+\\.\\d+$/);
+    expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(manifest.description).toContain("butmux");
     expect(manifest.author.name).toBe("Kodai Nakamura");
     expect(manifest.interface).toMatchObject({
@@ -355,7 +355,7 @@ Append these tests inside the existing `describe("plugin distribution artifacts"
     }>("plugins/claude-butmux/.claude-plugin/plugin.json");
 
     expect(manifest.name).toBe("claude-butmux");
-    expect(manifest.version).toMatch(/^\\d+\\.\\d+\\.\\d+$/);
+    expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(manifest.description).toContain("butmux");
     expect(manifest.author.name).toBe("Kodai Nakamura");
     expect(manifest).not.toHaveProperty("hooks");
