@@ -45,6 +45,12 @@ export type RenameManagedInput = {
   oldTerminalTabId?: number;
 };
 
+export type CreateGitButlerBranchInput = {
+  projectRoot: string;
+  name: string;
+  anchor?: string;
+};
+
 type PaneCandidate = {
   sessionName: string;
   paneId: string;
@@ -198,6 +204,18 @@ export async function createWorkspaceSession(
   backend: TerminalBackend = kittyBackend
 ): Promise<void> {
   await ensureSessionResources(buildWorkspaceSessionName(projectRoot), cwd, run, backend);
+}
+
+export async function createGitButlerBranch(
+  input: CreateGitButlerBranchInput,
+  cwd = input.projectRoot,
+  run: ExecFunction = exec
+): Promise<void> {
+  const args = ["branch", "new", input.name];
+  if (input.anchor) {
+    args.push("-a", input.anchor);
+  }
+  await run("but", args, cwd);
 }
 
 async function focusSessionByName(
