@@ -125,4 +125,79 @@ describe("plugin distribution artifacts", () => {
 
     expect(collectCommands(hooksFile)).toHaveLength(3);
   });
+
+  it("exposes the Claude butmux plugin through the repo marketplace", () => {
+    const marketplace = readJson<{
+      name: string;
+      owner: { name: string };
+      plugins: Array<{
+        name: string;
+        source: string;
+        description: string;
+        category: string;
+      }>;
+    }>(".claude-plugin/marketplace.json");
+
+    expect(marketplace.name).toBe("butmux");
+    expect(marketplace.owner.name).toBe("Kodai Nakamura");
+    expect(marketplace.plugins).toEqual([
+      {
+        name: "claude-butmux",
+        source: "./plugins/claude-butmux",
+        description: "Send Claude Code lifecycle hook state to butmux.",
+        category: "productivity"
+      }
+    ]);
+  });
+
+  it("defines a valid Claude plugin manifest", () => {
+    const manifest = readJson<{
+      name: string;
+      version: string;
+      description: string;
+      author: { name: string };
+      hooks?: unknown;
+    }>("plugins/claude-butmux/.claude-plugin/plugin.json");
+
+    expect(manifest.name).toBe("claude-butmux");
+    expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(manifest.description).toContain("butmux");
+    expect(manifest.author.name).toBe("Kodai Nakamura");
+    expect(manifest).not.toHaveProperty("hooks");
+  });
+
+  it("provides best-effort Claude lifecycle hooks", () => {
+    const hooksFile = readJson<HooksFile>("plugins/claude-butmux/hooks/hooks.json");
+
+    expect(Object.keys(hooksFile.hooks).sort()).toEqual([
+      "Notification",
+      "PostToolUse",
+      "SessionEnd",
+      "SessionStart",
+      "Stop",
+      "StopFailure",
+      "UserPromptSubmit"
+    ]);
+
+    const expectedEvents: Record<string, string> = {
+      SessionStart: "session-start",
+      UserPromptSubmit: "user-prompt-submit",
+      Notification: "notification",
+      Stop: "stop",
+      StopFailure: "stop-failure",
+      PostToolUse: "post-tool-use",
+      SessionEnd: "session-end"
+    };
+
+    for (const [claudeEvent, butmuxEvent] of Object.entries(expectedEvents)) {
+      const groups = hooksFile.hooks[claudeEvent];
+      expect(groups).toHaveLength(1);
+      expect(groups?.[0]?.hooks).toHaveLength(1);
+      const hook = groups?.[0]?.hooks[0];
+      expect(hook?.type).toBe("command");
+      expectBestEffortHookCommand(hook?.command ?? "", "claude", butmuxEvent);
+    }
+
+    expect(collectCommands(hooksFile)).toHaveLength(7);
+  });
 });

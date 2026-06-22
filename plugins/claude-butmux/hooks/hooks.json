@@ -1,0 +1,74 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook claude session-start; fi'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook claude user-prompt-submit; fi'"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook claude notification; fi'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook claude stop; fi'"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook claude stop-failure; fi'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook claude post-tool-use; fi'"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook claude session-end; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}

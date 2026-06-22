@@ -1,0 +1,14 @@
+{
+  "name": "butmux",
+  "owner": {
+    "name": "Kodai Nakamura"
+  },
+  "plugins": [
+    {
+      "name": "claude-butmux",
+      "source": "./plugins/claude-butmux",
+      "description": "Send Claude Code lifecycle hook state to butmux.",
+      "category": "productivity"
+    }
+  ]
+}

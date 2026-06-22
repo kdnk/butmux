@@ -1,0 +1,9 @@
+{
+  "name": "claude-butmux",
+  "version": "0.1.0",
+  "description": "Send Claude Code lifecycle hook state to butmux.",
+  "author": {
+    "name": "Kodai Nakamura"
+  },
+  "license": "MIT"
+}
