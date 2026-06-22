@@ -1,0 +1,20 @@
+{
+  "name": "butmux",
+  "interface": {
+    "displayName": "butmux"
+  },
+  "plugins": [
+    {
+      "name": "codex-butmux",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex-butmux"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

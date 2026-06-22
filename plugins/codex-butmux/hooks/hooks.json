@@ -1,0 +1,34 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook codex session-start; fi'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook codex user-prompt-submit; fi'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -lc 'if [ -z \"${TMUX_PANE:-}\" ]; then exit 0; fi; bin=\"${BUTMUX_BIN:-butmux}\"; if command -v \"$bin\" >/dev/null 2>&1 || [ -x \"$bin\" ]; then exec \"$bin\" hook codex stop; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}

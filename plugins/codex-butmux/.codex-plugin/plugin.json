@@ -1,0 +1,19 @@
+{
+  "name": "codex-butmux",
+  "version": "0.1.0",
+  "description": "Send Codex lifecycle hook state to butmux.",
+  "author": {
+    "name": "Kodai Nakamura"
+  },
+  "license": "MIT",
+  "keywords": ["butmux", "codex", "hooks", "tmux"],
+  "interface": {
+    "displayName": "butmux for Codex",
+    "shortDescription": "Send Codex pane status to butmux.",
+    "longDescription": "Installs Codex lifecycle hooks that call butmux hook codex events so butmux can show Codex pane state in tmux-backed work contexts.",
+    "developerName": "Kodai Nakamura",
+    "category": "Productivity",
+    "capabilities": ["Hooks"],
+    "defaultPrompt": ["Install butmux Codex hooks."]
+  }
+}

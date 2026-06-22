@@ -2,8 +2,9 @@
 
 ## Version Control
 
-- Use `git` for version control operations in this repository.
-- Do not use GitButler (`but`) for repository version control operations unless the user explicitly changes this policy.
+- Use GitButler (`but`) for version control operations in this repository.
+- Do not use direct `git` write operations such as `git add`, `git commit`, `git checkout`, `git merge`, `git rebase`, or `git push` unless the user explicitly changes this policy.
+- Read-only `git` inspection commands are allowed when they are useful.
 
 ## GitHub
 

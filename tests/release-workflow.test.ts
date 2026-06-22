@@ -27,6 +27,7 @@ describe("npm publish workflow", () => {
   it("allows the package to be published to npm", () => {
     const packageJson = JSON.parse(readFileSync(`${repoRoot}/package.json`, "utf8")) as {
       private?: boolean;
+      version?: string;
       repository?: {
         type?: string;
         url?: string;
@@ -34,6 +35,7 @@ describe("npm publish workflow", () => {
     };
 
     expect(packageJson.private).not.toBe(true);
+    expect(packageJson.version).toBe("0.4.0");
     expect(packageJson.repository).toEqual({
       type: "git",
       url: "https://github.com/kdnk/butmux"
