@@ -3,7 +3,6 @@
   "version": "0.2.8",
   "description": "butmux - Terminal workspace manager for GitButler, tmux, and Kitty",
   "author": "Kodai Nakamura",
-  "private": true,
   "type": "module",
   "bin": {
     "butmux": "dist/cli.js"
