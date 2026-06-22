@@ -1,5 +1,4 @@
-const MANAGED_PREFIX = "s_";
-const LEGACY_MANAGED_PREFIX = "seiton__";
+const MANAGED_PREFIX = "bm_";
 
 export type Branch = {
   name: string;
@@ -7,10 +6,6 @@ export type Branch = {
 };
 
 export type TerminalBackendName = "kitty" | "wezterm";
-
-export type RegistrySettings = {
-  terminalBackend: TerminalBackendName;
-};
 
 export type RegistryContext = {
   id: string;
@@ -37,7 +32,6 @@ export type RegistryProject = {
 };
 
 export type Registry = {
-  settings?: RegistrySettings;
   projects?: RegistryProject[];
   contexts: RegistryContext[];
 };
@@ -250,26 +244,18 @@ export function removeProject(input: RemoveProjectInput): Registry {
 }
 
 export function isManagedName(name: string): boolean {
-  return name.startsWith(MANAGED_PREFIX) || name.startsWith(LEGACY_MANAGED_PREFIX);
+  return name.startsWith(MANAGED_PREFIX);
 }
 
 export function branchFromManagedName(name: string): string {
-  if (name.startsWith(LEGACY_MANAGED_PREFIX)) {
-    const rest = name.slice(LEGACY_MANAGED_PREFIX.length);
-    const separator = rest.indexOf("__");
-    if (separator === -1) return decodeBranchKey(rest);
-    return decodeBranchKey(rest.slice(separator + 2));
-  }
-  const rest = name.slice(MANAGED_PREFIX.length);
+  const rest = name.startsWith(MANAGED_PREFIX) ? name.slice(MANAGED_PREFIX.length) : name;
   const separator = rest.indexOf("_");
   if (separator === -1) return decodeBranchKey(rest);
   return decodeBranchKey(rest.slice(separator + 1));
 }
 
 export function projectKeyFromManagedName(name: string): string | undefined {
-  if (name.startsWith(LEGACY_MANAGED_PREFIX)) {
-    return undefined;
-  }
+  if (!name.startsWith(MANAGED_PREFIX)) return undefined;
   const rest = name.slice(MANAGED_PREFIX.length);
   const separator = rest.indexOf("_");
   if (separator === -1) return undefined;
@@ -396,7 +382,7 @@ export function planSync(input: SyncInput): SyncPlan {
 
     if (context.pendingBranch && context.pendingBranch !== targetBranch) {
       warnings.push(
-        `GitButler branch name overrides pending Electron rename for ${context.branch}.`
+        `GitButler branch name overrides pending butmux rename for ${context.branch}.`
       );
     }
 

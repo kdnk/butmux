@@ -21,9 +21,6 @@ export async function loadRegistry(appDataDir: string): Promise<Registry> {
       : [];
     const projectRoots = new Set(projects.map((project) => project.root));
     return {
-      settings: {
-        terminalBackend: parsed.settings?.terminalBackend === "wezterm" ? "wezterm" : "kitty"
-      },
       projects,
       contexts: Array.isArray(parsed.contexts)
         ? parsed.contexts
@@ -37,7 +34,7 @@ export async function loadRegistry(appDataDir: string): Promise<Registry> {
     };
   } catch (error) {
     if (isMissingFile(error)) {
-      return { settings: { terminalBackend: "kitty" }, projects: [], contexts: [] };
+      return { projects: [], contexts: [] };
     }
     throw error;
   }

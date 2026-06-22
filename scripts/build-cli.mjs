@@ -1,7 +1,7 @@
 import { chmod } from 'node:fs/promises';
 import { build } from 'esbuild';
 
-const outfile = 'dist-electron/cli.js';
+const outfile = 'dist/cli.js';
 
 await build({
   entryPoints: ['src/cli.ts'],
@@ -9,7 +9,11 @@ await build({
   platform: 'node',
   format: 'esm',
   banner: {
-    js: '#!/usr/bin/env node',
+    js: [
+      '#!/usr/bin/env node',
+      'import { createRequire } from "node:module";',
+      'const require = createRequire(import.meta.url);',
+    ].join('\n'),
   },
   outfile,
 });

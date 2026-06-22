@@ -51,8 +51,8 @@ const registry: Registry = {
       projectRoot: "/repo/a",
       branch: "feature/notify-ui",
       branchKey: "feature%2Fnotify-ui",
-      tmuxSession: "s_a_feature%2Fnotify-ui",
-      terminalTabTitle: "s_a_feature%2Fnotify-ui",
+      tmuxSession: "bm_a_feature%2Fnotify-ui",
+      terminalTabTitle: "bm_a_feature%2Fnotify-ui",
       order: 10,
       createdAt: "2026-04-24T10:00:00+09:00",
       updatedAt: "2026-04-24T10:00:00+09:00"
@@ -68,8 +68,8 @@ function contextFixture(
     projectRoot: "/repo/a",
     branch: "feature/fixture",
     branchKey: "feature%2Ffixture",
-    tmuxSession: "s_a_feature%2Ffixture",
-    terminalTabTitle: "s_a_feature%2Ffixture",
+    tmuxSession: "bm_a_feature%2Ffixture",
+    terminalTabTitle: "bm_a_feature%2Ffixture",
     order: 10,
     createdAt: "2026-04-24T10:00:00+09:00",
     updatedAt: "2026-04-24T10:00:00+09:00",
@@ -81,7 +81,7 @@ describe("managed naming", () => {
   it("builds safe names from branch names", () => {
     expect(buildBranchKey("feature/notify-ui")).toBe("feature%2Fnotify-ui");
     expect(buildManagedName("/repo/a", "feature/notify-ui")).toBe(
-      "s_a_feature%2Fnotify-ui"
+      "bm_a_feature%2Fnotify-ui"
     );
     expect(buildWorkspaceSessionName("/repo/a")).toBe("a");
     expect(buildWorkspaceSessionName("/repo/yoyogi-local.tokyo")).toBe("yoyogi-local_tokyo");
@@ -95,7 +95,7 @@ describe("managed naming", () => {
     expect(buildProjectSlug("/Users/kodai/workspaces/github.com/kdnk/git-butler-practice")).toBe("gbp");
     expect(buildProjectSlug("/Users/kodai/workspaces/github.com/kdnk/MyGreatApp")).toBe("mga");
     expect(buildProjectSlug("/Users/kodai/workspaces/github.com/kdnk/snake_case_tool")).toBe("sct");
-    expect(buildProjectSlug("/Users/kodai/workspaces/github.com/kdnk/seiton")).toBe("seiton");
+    expect(buildProjectSlug("/Users/kodai/workspaces/github.com/kdnk/butmux")).toBe("butmux");
   });
 });
 
@@ -155,16 +155,16 @@ describe("project registry", () => {
             projectRoot: "/repo/a",
             branch: "feature/a",
             branchKey: "feature%2Fa",
-            tmuxSession: "s_a_feature%2Fa",
-            terminalTabTitle: "s_a_feature%2Fa"
+            tmuxSession: "bm_a_feature%2Fa",
+            terminalTabTitle: "bm_a_feature%2Fa"
           }),
           contextFixture({
             id: "ctx-b",
             projectRoot: "/repo/b",
             branch: "feature/b",
             branchKey: "feature%2Fb",
-            tmuxSession: "s_b_feature%2Fb",
-            terminalTabTitle: "s_b_feature%2Fb",
+            tmuxSession: "bm_b_feature%2Fb",
+            terminalTabTitle: "bm_b_feature%2Fb",
             order: 20
           })
         ]
@@ -246,10 +246,10 @@ describe("context detection", () => {
     const contexts = detectContexts({
       projectRoot: "/repo/a",
       branches: [{ name: "feature/claude-notify" }],
-      tmuxSessions: ["s_a_feature%2Fclaude-notify"],
-      kittyTabs: [{ id: 1, title: "s_a_feature%2Fclaude-notify", osWindowId: 100, index: 0 }],
+      tmuxSessions: ["bm_a_feature%2Fclaude-notify"],
+      kittyTabs: [{ id: 1, title: "bm_a_feature%2Fclaude-notify", osWindowId: 100, index: 0 }],
       agentPanesBySession: {
-        "s_a_feature%2Fclaude-notify": [
+        "bm_a_feature%2Fclaude-notify": [
           {
             agent: "claude",
             paneId: "%21",
@@ -275,9 +275,9 @@ describe("context detection", () => {
     const contexts = detectContexts({
       projectRoot: "/repo/a",
       branches: [{ name: "feature/notify-ui" }],
-      tmuxSessions: ["s_a_feature%2Fnotify-ui"],
+      tmuxSessions: ["bm_a_feature%2Fnotify-ui"],
       kittyTabs: [
-        { id: 1, title: "s_a_feature%2Fnotify-ui", osWindowId: 100, index: 0 }
+        { id: 1, title: "bm_a_feature%2Fnotify-ui", osWindowId: 100, index: 0 }
       ],
       agentPanesBySession: {},
       registry
@@ -296,7 +296,7 @@ describe("context detection", () => {
     const contexts = detectContexts({
       projectRoot: "/repo/a",
       branches: [],
-      tmuxSessions: ["s_a_feature%2Fnotify-ui"],
+      tmuxSessions: ["bm_a_feature%2Fnotify-ui"],
       kittyTabs: [],
       agentPanesBySession: {},
       registry
@@ -310,31 +310,26 @@ describe("context detection", () => {
     ]);
   });
 
-  it("recognizes legacy managed session names for orphan detection", () => {
+  it("ignores old s_ session names during orphan detection", () => {
     const contexts = detectContexts({
       projectRoot: "/repo/a",
       branches: [],
-      tmuxSessions: ["seiton__%2Frepo%2Fa__feature%2Fnotify-ui"],
+      tmuxSessions: ["s_a_feature%2Fnotify-ui"],
       kittyTabs: [],
       agentPanesBySession: {},
       registry
     });
 
-    expect(contexts).toMatchObject([
-      {
-        branch: "feature/notify-ui",
-        status: "orphan_tmux"
-      }
-    ]);
+    expect(contexts).toEqual([]);
   });
 
   it("isolates registry contexts by project directory", () => {
     const contexts = detectContexts({
       projectRoot: "/repo/b",
       branches: [{ name: "feature/notify-ui" }],
-      tmuxSessions: ["s_a_feature%2Fnotify-ui"],
+      tmuxSessions: ["bm_a_feature%2Fnotify-ui"],
       kittyTabs: [
-        { id: 1, title: "s_a_feature%2Fnotify-ui", osWindowId: 100, index: 0 }
+        { id: 1, title: "bm_a_feature%2Fnotify-ui", osWindowId: 100, index: 0 }
       ],
       agentPanesBySession: {},
       registry
@@ -353,13 +348,13 @@ describe("GitButler parsing", () => {
     const output = `Initiated a background sync...
 ╭┄zz [unassigned changes] (no changes)
 ┊
-┊╭┄ei [seiton-parser-test] (no commits)
+┊╭┄ei [butmux-parser-test] (no commits)
 ├╯
 ┊
 ┴ eb06544 [origin/main] 2026-04-01 Create README.md`;
 
     expect(parseButBranches(output)).toEqual([
-      { id: "ei", name: "seiton-parser-test" }
+      { id: "ei", name: "butmux-parser-test" }
     ]);
   });
 
@@ -387,7 +382,7 @@ describe("GitButler parsing", () => {
           throw new Error("Command failed: but status -fv Error: Setup required: No GitButler project found at .");
         }
         return {
-          stdout: "┊╭┄ei [seiton-parser-test] (no commits)\n├╯",
+          stdout: "┊╭┄ei [butmux-parser-test] (no commits)\n├╯",
           stderr: ""
         };
       }
@@ -401,7 +396,7 @@ describe("GitButler parsing", () => {
 
     expect(result).toEqual({
       ok: true,
-      value: [{ id: "ei", name: "seiton-parser-test" }],
+      value: [{ id: "ei", name: "butmux-parser-test" }],
       warnings: ["GitButler project was set up automatically for /repo/a."]
     });
     expect(calls).toEqual([
@@ -423,7 +418,7 @@ describe("GitButler parsing", () => {
           };
         }
         return {
-          stdout: "┊╭┄ei [seiton-parser-test] (no commits)\n├╯",
+          stdout: "┊╭┄ei [butmux-parser-test] (no commits)\n├╯",
           stderr: ""
         };
       }
@@ -470,9 +465,9 @@ describe("GitButler parsing", () => {
 
     const result = await parseTmuxCodexPanes(
       [
-        "s_a_feature%2Fnotify-ui\t%12\tnode\t",
-        "s_a_feature%2Fnotify-ui\t%9\tnode\t",
-        "s_a_feature%2Fnotify-ui\t%7\tfish\t",
+        "bm_a_feature%2Fnotify-ui\t%12\tnode\t",
+        "bm_a_feature%2Fnotify-ui\t%9\tnode\t",
+        "bm_a_feature%2Fnotify-ui\t%7\tfish\t",
         "other\t%3\tbash\tbash"
       ].join("\n"),
       "/repo/a",
@@ -480,7 +475,7 @@ describe("GitButler parsing", () => {
     );
 
     expect(result).toEqual({
-      "s_a_feature%2Fnotify-ui": [
+      "bm_a_feature%2Fnotify-ui": [
         {
           agent: "codex",
           paneId: "%12",
@@ -503,26 +498,26 @@ describe("GitButler parsing", () => {
     const calls: Array<{ file: string; args: string[]; cwd: string }> = [];
     const exec: ExecFunction = async (file, args, cwd) => {
       calls.push({ file, args, cwd });
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_agent") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_agent") {
         return { stdout: "codex\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_status") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_status") {
         return { stdout: "waiting\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_prompt") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_prompt") {
         return { stdout: "needs review\n", stderr: "" };
       }
       throw new Error(`unexpected command: ${file} ${args.join(" ")}`);
     };
 
     const result = await readAgentPanesFromTmuxOptions(
-      "s_a_feature%2Fnotify-ui\t%12\tnode\t",
+      "bm_a_feature%2Fnotify-ui\t%12\tnode\t",
       "/repo/a",
       exec
     );
 
     expect(result).toEqual({
-      "s_a_feature%2Fnotify-ui": [
+      "bm_a_feature%2Fnotify-ui": [
         {
           agent: "codex",
           paneId: "%12",
@@ -536,20 +531,20 @@ describe("GitButler parsing", () => {
 
   it("ignores stale codex pane options after the process exits", async () => {
     const exec: ExecFunction = async (file, args) => {
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_agent") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_agent") {
         return { stdout: "codex\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_status") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_status") {
         return { stdout: "idle\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_prompt") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_prompt") {
         return { stdout: "stale\n", stderr: "" };
       }
       throw new Error(`unexpected command: ${file} ${args.join(" ")}`);
     };
 
     const result = await readAgentPanesFromTmuxOptions(
-      "s_a_feature%2Fnotify-ui\t%12\tfish\t",
+      "bm_a_feature%2Fnotify-ui\t%12\tfish\t",
       "/repo/a",
       exec
     );
@@ -559,26 +554,26 @@ describe("GitButler parsing", () => {
 
   it("reads a claude pane from tmux options", async () => {
     const exec: ExecFunction = async (file, args) => {
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_agent") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_agent") {
         return { stdout: "claude\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_status") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_status") {
         return { stdout: "waiting\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_prompt") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_prompt") {
         return { stdout: "Need approval to continue\n", stderr: "" };
       }
       throw new Error(`unexpected command: ${file} ${args.join(" ")}`);
     };
 
     const result = await readAgentPanesFromTmuxOptions(
-      "s_a_feature%2Fclaude-notify\t%21\tclaude\tclaude\n",
+      "bm_a_feature%2Fclaude-notify\t%21\tclaude\tclaude\n",
       "/repo/a",
       exec
     );
 
     expect(result).toEqual({
-      "s_a_feature%2Fclaude-notify": [
+      "bm_a_feature%2Fclaude-notify": [
         {
           agent: "claude",
           paneId: "%21",
@@ -607,13 +602,13 @@ describe("GitButler parsing", () => {
     };
 
     const result = await parseTmuxClaudePanes(
-      "s_a_feature%2Fclaude\t%21\tclaude\tclaude\n",
+      "bm_a_feature%2Fclaude\t%21\tclaude\tclaude\n",
       "/repo/a",
       exec
     );
 
     expect(result).toEqual({
-      "s_a_feature%2Fclaude": [
+      "bm_a_feature%2Fclaude": [
         {
           agent: "claude",
           paneId: "%21",
@@ -646,13 +641,13 @@ describe("GitButler parsing", () => {
     };
 
     const result = await parseTmuxClaudePanes(
-      "s_a_feature%2Fclaude\t%42\t2.1.119\t\n",
+      "bm_a_feature%2Fclaude\t%42\t2.1.119\t\n",
       "/repo/a",
       exec
     );
 
     expect(result).toEqual({
-      "s_a_feature%2Fclaude": [
+      "bm_a_feature%2Fclaude": [
         {
           agent: "claude",
           paneId: "%42",
@@ -684,23 +679,23 @@ describe("GitButler parsing", () => {
     };
 
     const result = await parseTmuxClaudePanes(
-      "s_a_feature%2Fclaude\t%43\t2.1.119\t\n",
+      "bm_a_feature%2Fclaude\t%43\t2.1.119\t\n",
       "/repo/a",
       exec
     );
 
-    expect(result["s_a_feature%2Fclaude"]?.[0]?.status).toBe("idle");
+    expect(result["bm_a_feature%2Fclaude"]?.[0]?.status).toBe("idle");
   });
 
   it("prefers hook-backed claude pane state over runtime-derived state", async () => {
     const exec: ExecFunction = async (file, args) => {
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_agent") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_agent") {
         return { stdout: "claude\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_status") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_status") {
         return { stdout: "waiting\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_prompt") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_prompt") {
         return { stdout: "Need confirmation before deploy\n", stderr: "" };
       }
       if (file === "tmux" && args[0] === "capture-pane") {
@@ -718,13 +713,13 @@ describe("GitButler parsing", () => {
     };
 
     const result = await readAgentPanesFromTmux(
-      "s_a_feature%2Fclaude\t%21\tclaude\tclaude\n",
+      "bm_a_feature%2Fclaude\t%21\tclaude\tclaude\n",
       "/repo/a",
       exec
     );
 
     expect(result).toEqual({
-      "s_a_feature%2Fclaude": [
+      "bm_a_feature%2Fclaude": [
         {
           agent: "claude",
           paneId: "%21",
@@ -738,20 +733,20 @@ describe("GitButler parsing", () => {
 
   it("ignores stale claude pane options after claude exits", async () => {
     const exec: ExecFunction = async (file, args) => {
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_agent") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_agent") {
         return { stdout: "claude\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_status") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_status") {
         return { stdout: "idle\n", stderr: "" };
       }
-      if (file === "tmux" && args[0] === "show-options" && args[5] === "@seiton_prompt") {
+      if (file === "tmux" && args[0] === "show-options" && args[5] === "@butmux_prompt") {
         return { stdout: "stale\n", stderr: "" };
       }
       throw new Error(`unexpected command: ${file} ${args.join(" ")}`);
     };
 
     const result = await readAgentPanesFromTmuxOptions(
-      "s_a_feature%2Fclaude-notify\t%21\tfish\tfish\n",
+      "bm_a_feature%2Fclaude-notify\t%21\tfish\tfish\n",
       "/repo/a",
       exec
     );
@@ -782,37 +777,37 @@ describe("GitButler parsing", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%12", "@seiton_agent", "codex"],
+        args: ["set-option", "-p", "-t", "%12", "@butmux_agent", "codex"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%12", "@seiton_status", "running"],
+        args: ["set-option", "-p", "-t", "%12", "@butmux_status", "running"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%12", "@seiton_prompt", "Review current branch"],
+        args: ["set-option", "-p", "-t", "%12", "@butmux_prompt", "Review current branch"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%12", "@seiton_cwd", "/repo/a"],
+        args: ["set-option", "-p", "-t", "%12", "@butmux_cwd", "/repo/a"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%12", "@seiton_started_at", expect.any(String)],
+        args: ["set-option", "-p", "-t", "%12", "@butmux_started_at", expect.any(String)],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-u", "-t", "%12", "@seiton_attention"],
+        args: ["set-option", "-p", "-u", "-t", "%12", "@butmux_attention"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-u", "-t", "%12", "@seiton_wait_reason"],
+        args: ["set-option", "-p", "-u", "-t", "%12", "@butmux_wait_reason"],
         cwd: "/repo/a"
       }
     ]);
@@ -849,32 +844,32 @@ describe("GitButler parsing", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%21", "@seiton_agent", "claude"],
+        args: ["set-option", "-p", "-t", "%21", "@butmux_agent", "claude"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%21", "@seiton_status", "waiting"],
+        args: ["set-option", "-p", "-t", "%21", "@butmux_status", "waiting"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%21", "@seiton_prompt", "Need approval to continue"],
+        args: ["set-option", "-p", "-t", "%21", "@butmux_prompt", "Need approval to continue"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%21", "@seiton_cwd", "/repo/a"],
+        args: ["set-option", "-p", "-t", "%21", "@butmux_cwd", "/repo/a"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%21", "@seiton_attention", "notification"],
+        args: ["set-option", "-p", "-t", "%21", "@butmux_attention", "notification"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["set-option", "-p", "-t", "%21", "@seiton_wait_reason", "notification"],
+        args: ["set-option", "-p", "-t", "%21", "@butmux_wait_reason", "notification"],
         cwd: "/repo/a"
       }
     ]);
@@ -894,7 +889,7 @@ describe("codex pane command labels", () => {
     expect(resolveAgentPaneCommand(
       "codex",
       "codex",
-      "codex --model gpt-5 /Users/kodai/workspaces/github.com/kdnk/seiton"
+      "codex --model gpt-5 /Users/kodai/workspaces/github.com/kdnk/butmux"
     )).toBe("codex --model gpt-5");
   });
 });
@@ -906,7 +901,7 @@ describe("focusing contexts", () => {
       calls.push({ file, args, cwd });
       if (file === "kitty" && args[1] === "focus-tab") {
         throw new Error(
-          "Command failed: kitty @ focus-tab --match title:s_a_feature%2Fnotify-ui Error: No matching tabs for expression: title:s_a_feature%2Fnotify-ui"
+          "Command failed: kitty @ focus-tab --match title:bm_a_feature%2Fnotify-ui Error: No matching tabs for expression: title:bm_a_feature%2Fnotify-ui"
         );
       }
       if (file === "kitty" && args[1] === "launch") {
@@ -923,17 +918,17 @@ describe("focusing contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "focus-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "focus-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "launch", "--type=tab", "--tab-title", "s_a_feature%2Fnotify-ui", "tmux", "new-session", "-A", "-s", "s_a_feature%2Fnotify-ui"],
+        args: ["@", "launch", "--type=tab", "--tab-title", "bm_a_feature%2Fnotify-ui", "tmux", "new-session", "-A", "-s", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
     ]);
@@ -951,7 +946,7 @@ describe("focusing contexts", () => {
               tabs: [
                 {
                   id: 10,
-                  title: "s_a_feature%2Fnotify-ui",
+                  title: "bm_a_feature%2Fnotify-ui",
                   windows: [
                     {
                       is_active: true,
@@ -969,7 +964,7 @@ describe("focusing contexts", () => {
       if (file === "kitty") return { stdout: "", stderr: "" };
       if (file === "tmux" && args[0] === "has-session") return { stdout: "", stderr: "" };
       if (file === "tmux" && args[0] === "list-clients") {
-        return { stdout: "/dev/ttys000\ts_a_feature%2Fnotify-ui\t1234\n", stderr: "" };
+        return { stdout: "/dev/ttys000\tbm_a_feature%2Fnotify-ui\t1234\n", stderr: "" };
       }
       if (file === "tmux" && args[0] === "switch-client" && args.includes("-c")) {
         return { stdout: "", stderr: "" };
@@ -990,12 +985,12 @@ describe("focusing contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "focus-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "focus-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1010,7 +1005,7 @@ describe("focusing contexts", () => {
       },
       {
         file: "tmux",
-        args: ["switch-client", "-c", "/dev/ttys000", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["switch-client", "-c", "/dev/ttys000", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1049,22 +1044,22 @@ describe("focusing contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["new-session", "-d", "-s", "s_a_feature%2Fnotify-ui"],
+        args: ["new-session", "-d", "-s", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "focus-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "focus-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "launch", "--type=tab", "--tab-title", "s_a_feature%2Fnotify-ui", "tmux", "new-session", "-A", "-s", "s_a_feature%2Fnotify-ui"],
+        args: ["@", "launch", "--type=tab", "--tab-title", "bm_a_feature%2Fnotify-ui", "tmux", "new-session", "-A", "-s", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
     ]);
@@ -1093,12 +1088,12 @@ describe("focusing contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "focus-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "focus-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1123,7 +1118,7 @@ describe("focusing contexts", () => {
       }
       if (file === "kitty" && args[1] === "focus-tab") {
         throw {
-          message: "Command failed: kitty @ focus-tab --match title:s_a_feature%2Fnotify-ui",
+          message: "Command failed: kitty @ focus-tab --match title:bm_a_feature%2Fnotify-ui",
           stderr:
             "Error: Failed to connect to unix:/tmp/mykitty-81414 with error: dial unix /tmp/mykitty-81414: connect: no such file or directory\n"
         };
@@ -1141,17 +1136,17 @@ describe("focusing contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "focus-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "focus-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["switch-client", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["switch-client", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       }
     ]);
@@ -1175,7 +1170,7 @@ describe("focusing contexts", () => {
               tabs: [
                 {
                   id: 10,
-                  title: "s_a_feature%2Fnotify-ui",
+                  title: "bm_a_feature%2Fnotify-ui",
                   windows: [
                     {
                       is_active: true,
@@ -1191,7 +1186,7 @@ describe("focusing contexts", () => {
         };
       }
       if (file === "tmux" && args[0] === "list-clients") {
-        return { stdout: "/dev/ttys007\ts_other\t9999\n/dev/ttys009\ts_a_feature%2Fnotify-ui\t1234\n", stderr: "" };
+        return { stdout: "/dev/ttys007\tother\t9999\n/dev/ttys009\tbm_a_feature%2Fnotify-ui\t1234\n", stderr: "" };
       }
       if (file === "tmux" && args[0] === "switch-client") {
         return { stdout: "", stderr: "" };
@@ -1204,12 +1199,12 @@ describe("focusing contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "focus-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "focus-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1224,7 +1219,7 @@ describe("focusing contexts", () => {
       },
       {
         file: "tmux",
-        args: ["switch-client", "-c", "/dev/ttys009", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["switch-client", "-c", "/dev/ttys009", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       }
     ]);
@@ -1248,7 +1243,7 @@ describe("focusing contexts", () => {
               tabs: [
                 {
                   id: 10,
-                  title: "s_a_feature%2Fnotify-ui",
+                  title: "bm_a_feature%2Fnotify-ui",
                   windows: [
                     {
                       is_active: true
@@ -1262,7 +1257,7 @@ describe("focusing contexts", () => {
         };
       }
       if (file === "tmux" && args[0] === "list-clients") {
-        return { stdout: "/dev/ttys007\ts_other\t9999\n", stderr: "" };
+        return { stdout: "/dev/ttys007\tother\t9999\n", stderr: "" };
       }
       if (file === "tmux" && args[0] === "switch-client") {
         throw new Error("switch-client should not be called");
@@ -1275,12 +1270,12 @@ describe("focusing contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "focus-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "focus-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1389,7 +1384,7 @@ describe("focusing contexts", () => {
               tabs: [
                 {
                   id: 10,
-                  title: "s_seiton_feat%2Fbugfix",
+                  title: "bm_butmux_feat%2Fbugfix",
                   windows: [
                     {
                       is_active: false,
@@ -1400,7 +1395,7 @@ describe("focusing contexts", () => {
                 },
                 {
                   id: 11,
-                  title: "seiton",
+                  title: "butmux",
                   windows: [
                     {
                       is_active: true,
@@ -1419,7 +1414,7 @@ describe("focusing contexts", () => {
         return { stdout: "", stderr: "" };
       }
       if (file === "tmux" && args[0] === "list-clients") {
-        return { stdout: "/dev/ttys000\tseiton\t1234\n", stderr: "" };
+        return { stdout: "/dev/ttys000\tbutmux\t1234\n", stderr: "" };
       }
       if (file === "tmux" && args[0] === "switch-client") {
         return { stdout: "", stderr: "" };
@@ -1428,42 +1423,42 @@ describe("focusing contexts", () => {
     };
 
     await focusWorkspaceSession(
-      "/Users/kodai/workspaces/github.com/kdnk/seiton",
+      "/Users/kodai/workspaces/github.com/kdnk/butmux",
       undefined,
-      "/Users/kodai/workspaces/github.com/kdnk/seiton",
+      "/Users/kodai/workspaces/github.com/kdnk/butmux",
       exec
     );
 
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "seiton"],
-        cwd: "/Users/kodai/workspaces/github.com/kdnk/seiton"
+        args: ["has-session", "-t", "butmux"],
+        cwd: "/Users/kodai/workspaces/github.com/kdnk/butmux"
       },
       {
         file: "kitty",
         args: ["@", "ls"],
-        cwd: "/Users/kodai/workspaces/github.com/kdnk/seiton"
+        cwd: "/Users/kodai/workspaces/github.com/kdnk/butmux"
       },
       {
         file: "kitty",
         args: ["@", "focus-tab", "--match", "id:11"],
-        cwd: "/Users/kodai/workspaces/github.com/kdnk/seiton"
+        cwd: "/Users/kodai/workspaces/github.com/kdnk/butmux"
       },
       {
         file: "kitty",
         args: ["@", "ls"],
-        cwd: "/Users/kodai/workspaces/github.com/kdnk/seiton"
+        cwd: "/Users/kodai/workspaces/github.com/kdnk/butmux"
       },
       {
         file: "tmux",
         args: ["list-clients", "-F", "#{client_tty}\t#{session_name}\t#{client_pid}"],
-        cwd: "/Users/kodai/workspaces/github.com/kdnk/seiton"
+        cwd: "/Users/kodai/workspaces/github.com/kdnk/butmux"
       },
       {
         file: "tmux",
-        args: ["switch-client", "-c", "/dev/ttys000", "-t", "seiton"],
-        cwd: "/Users/kodai/workspaces/github.com/kdnk/seiton"
+        args: ["switch-client", "-c", "/dev/ttys000", "-t", "butmux"],
+        cwd: "/Users/kodai/workspaces/github.com/kdnk/butmux"
       }
     ]);
   });
@@ -1578,7 +1573,7 @@ describe("removing orphan contexts", () => {
     };
 
     await removeOrphanContext(
-      { projectRoot: "/repo/a", tmuxSession: "s_a_feature%2Fnotify-ui", terminalTabTitle: "s_a_feature%2Fnotify-ui" },
+      { projectRoot: "/repo/a", tmuxSession: "bm_a_feature%2Fnotify-ui", terminalTabTitle: "bm_a_feature%2Fnotify-ui" },
       "/repo/a",
       exec
     );
@@ -1586,12 +1581,12 @@ describe("removing orphan contexts", () => {
     expect(calls).toEqual([
       {
         file: "kitty",
-        args: ["@", "close-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "close-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["kill-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["kill-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       }
     ]);
@@ -1612,7 +1607,7 @@ describe("removing orphan contexts", () => {
 
     await expect(
       removeOrphanContext(
-        { projectRoot: "/repo/a", tmuxSession: "s_a_feature%2Fnotify-ui", terminalTabTitle: "s_a_feature%2Fnotify-ui" },
+        { projectRoot: "/repo/a", tmuxSession: "bm_a_feature%2Fnotify-ui", terminalTabTitle: "bm_a_feature%2Fnotify-ui" },
         "/repo/a",
         exec
       )
@@ -1621,12 +1616,12 @@ describe("removing orphan contexts", () => {
     expect(calls).toEqual([
       {
         file: "kitty",
-        args: ["@", "close-tab", "--match", "title:s_a_feature%2Fnotify-ui"],
+        args: ["@", "close-tab", "--match", "title:bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
         file: "tmux",
-        args: ["kill-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["kill-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       }
     ]);
@@ -1647,8 +1642,8 @@ describe("renaming managed contexts", () => {
         branchId: "ab",
         oldBranch: "feature/notify-ui",
         newBranch: "feature/renamed-ui",
-        oldTmuxSession: "s_a_feature%2Fnotify-ui",
-        oldTerminalTabTitle: "s_a_feature%2Fnotify-ui"
+        oldTmuxSession: "bm_a_feature%2Fnotify-ui",
+        oldTerminalTabTitle: "bm_a_feature%2Fnotify-ui"
       },
       "/repo/a",
       exec
@@ -1662,12 +1657,12 @@ describe("renaming managed contexts", () => {
       },
       {
         file: "tmux",
-        args: ["rename-session", "-t", "s_a_feature%2Fnotify-ui", "s_a_feature%2Frenamed-ui"],
+        args: ["rename-session", "-t", "bm_a_feature%2Fnotify-ui", "bm_a_feature%2Frenamed-ui"],
         cwd: "/repo/a"
       },
       {
         file: "kitty",
-        args: ["@", "set-tab-title", "--match", "title:s_a_feature%2Fnotify-ui", "s_a_feature%2Frenamed-ui"],
+        args: ["@", "set-tab-title", "--match", "title:bm_a_feature%2Fnotify-ui", "bm_a_feature%2Frenamed-ui"],
         cwd: "/repo/a"
       }
     ]);
@@ -1686,8 +1681,8 @@ describe("renaming managed contexts", () => {
         branchId: "ab",
         oldBranch: "feature/notify-ui",
         newBranch: "feature/renamed-ui",
-        oldTmuxSession: "s_a_feature%2Fnotify-ui",
-        oldTerminalTabTitle: "s_a_feature%2Fnotify-ui",
+        oldTmuxSession: "bm_a_feature%2Fnotify-ui",
+        oldTerminalTabTitle: "bm_a_feature%2Fnotify-ui",
         oldTerminalTabId: 42
       },
       "/repo/a",
@@ -1696,7 +1691,7 @@ describe("renaming managed contexts", () => {
 
     expect(calls[2]).toEqual({
       file: "kitty",
-      args: ["@", "set-tab-title", "--match", "id:42", "s_a_feature%2Frenamed-ui"],
+      args: ["@", "set-tab-title", "--match", "id:42", "bm_a_feature%2Frenamed-ui"],
       cwd: "/repo/a"
     });
   });
@@ -1713,8 +1708,8 @@ describe("renaming managed contexts", () => {
         projectRoot: "/repo/a",
         oldBranch: "feature/notify-ui",
         newBranch: "feature/renamed-ui",
-        oldTmuxSession: "s_a_feature%2Fnotify-ui",
-        oldTerminalTabTitle: "s_a_feature%2Fnotify-ui"
+        oldTmuxSession: "bm_a_feature%2Fnotify-ui",
+        oldTerminalTabTitle: "bm_a_feature%2Fnotify-ui"
       },
       "/repo/a",
       exec
@@ -1739,7 +1734,7 @@ describe("renaming managed contexts", () => {
               tab_id: 10,
               pane_id: 42,
               title: "tmux",
-              tab_title: "s_a_feature%2Fnotify-ui"
+              tab_title: "bm_a_feature%2Fnotify-ui"
             }
           ]),
           stderr: ""
@@ -1754,8 +1749,8 @@ describe("renaming managed contexts", () => {
         branchId: "ab",
         oldBranch: "feature/notify-ui",
         newBranch: "feature/renamed-ui",
-        oldTmuxSession: "s_a_feature%2Fnotify-ui",
-        oldTerminalTabTitle: "s_a_feature%2Fnotify-ui"
+        oldTmuxSession: "bm_a_feature%2Fnotify-ui",
+        oldTerminalTabTitle: "bm_a_feature%2Fnotify-ui"
       },
       "/repo/a",
       exec,
@@ -1770,7 +1765,7 @@ describe("renaming managed contexts", () => {
       },
       {
         file: "tmux",
-        args: ["rename-session", "-t", "s_a_feature%2Fnotify-ui", "s_a_feature%2Frenamed-ui"],
+        args: ["rename-session", "-t", "bm_a_feature%2Fnotify-ui", "bm_a_feature%2Frenamed-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1780,7 +1775,7 @@ describe("renaming managed contexts", () => {
       },
       {
         file: "wezterm",
-        args: ["cli", "set-tab-title", "--pane-id", "42", "s_a_feature%2Frenamed-ui"],
+        args: ["cli", "set-tab-title", "--pane-id", "42", "bm_a_feature%2Frenamed-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1791,7 +1786,7 @@ describe("renaming managed contexts", () => {
           "--pane-id",
           "42",
           "--no-paste",
-          "\u001b]1;s_a_feature%2Frenamed-ui\u0007\u001b]2;s_a_feature%2Frenamed-ui\u0007"
+          "\u001b]1;bm_a_feature%2Frenamed-ui\u0007\u001b]2;bm_a_feature%2Frenamed-ui\u0007"
         ],
         cwd: "/repo/a"
       }
@@ -1813,7 +1808,7 @@ describe("renaming managed contexts", () => {
               tab_id: 10,
               pane_id: 42,
               title: "tmux",
-              tab_title: "s_a_feature%2Fnotify-ui"
+              tab_title: "bm_a_feature%2Fnotify-ui"
             }
           ]),
           stderr: ""
@@ -1830,7 +1825,7 @@ describe("renaming managed contexts", () => {
     expect(calls).toEqual([
       {
         file: "tmux",
-        args: ["has-session", "-t", "s_a_feature%2Fnotify-ui"],
+        args: ["has-session", "-t", "bm_a_feature%2Fnotify-ui"],
         cwd: "/repo/a"
       },
       {
@@ -1851,19 +1846,19 @@ describe("registry reconciliation", () => {
   it("creates project-scoped registry contexts for new branches", () => {
     const next = reconcileRegistry({
       projectRoot: "/repo/b",
-      branches: [{ id: "ei", name: "seiton-parser-test" }],
+      branches: [{ id: "ei", name: "butmux-parser-test" }],
       registry,
       now: "2026-04-24T11:00:00+09:00"
     });
 
     expect(next.contexts).toContainEqual({
-      id: "/repo/b:seiton-parser-test",
+      id: "/repo/b:butmux-parser-test",
       projectRoot: "/repo/b",
-      branch: "seiton-parser-test",
-      branchKey: "seiton-parser-test",
+      branch: "butmux-parser-test",
+      branchKey: "butmux-parser-test",
       branchId: "ei",
-      tmuxSession: "s_b_seiton-parser-test",
-      terminalTabTitle: "s_b_seiton-parser-test",
+      tmuxSession: "bm_b_butmux-parser-test",
+      terminalTabTitle: "bm_b_butmux-parser-test",
       order: 10,
       createdAt: "2026-04-24T11:00:00+09:00",
       updatedAt: "2026-04-24T11:00:00+09:00"
@@ -1887,13 +1882,13 @@ describe("sync planning", () => {
       {
         type: "create_tmux_session",
         branch: "feature/notify-ui",
-        tmuxSession: "s_a_feature%2Fnotify-ui"
+        tmuxSession: "bm_a_feature%2Fnotify-ui"
       },
       {
         type: "create_terminal_tab",
         branch: "feature/notify-ui",
-        terminalTabTitle: "s_a_feature%2Fnotify-ui",
-        tmuxSession: "s_a_feature%2Fnotify-ui"
+        terminalTabTitle: "bm_a_feature%2Fnotify-ui",
+        tmuxSession: "bm_a_feature%2Fnotify-ui"
       }
     ]);
   });
@@ -1902,9 +1897,9 @@ describe("sync planning", () => {
     const plan = planSync({
       projectRoot: "/repo/a",
       branches: [{ name: "feature/gitbutler-name", id: "branch-1" }],
-      tmuxSessions: ["s_a_feature%2Fold-name"],
+      tmuxSessions: ["bm_a_feature%2Fold-name"],
       kittyTabs: [
-        { id: 1, title: "s_a_feature%2Fold-name", osWindowId: 100, index: 0 }
+        { id: 1, title: "bm_a_feature%2Fold-name", osWindowId: 100, index: 0 }
       ],
       agentPanesBySession: {},
       registry: {
@@ -1915,9 +1910,9 @@ describe("sync planning", () => {
             branch: "feature/old-name",
             branchKey: "feature%2Fold-name",
             branchId: "branch-1",
-            pendingBranch: "feature/electron-name",
-            tmuxSession: "s_a_feature%2Fold-name",
-            terminalTabTitle: "s_a_feature%2Fold-name",
+            pendingBranch: "feature/butmux-name",
+            tmuxSession: "bm_a_feature%2Fold-name",
+            terminalTabTitle: "bm_a_feature%2Fold-name",
             order: 10,
             createdAt: "2026-04-24T10:00:00+09:00",
             updatedAt: "2026-04-24T10:00:00+09:00"
@@ -1928,15 +1923,15 @@ describe("sync planning", () => {
 
     expect(plan.commands).toContainEqual({
       type: "rename_tmux_session",
-      oldSession: "s_a_feature%2Fold-name",
-      newSession: "s_a_feature%2Fgitbutler-name"
+      oldSession: "bm_a_feature%2Fold-name",
+      newSession: "bm_a_feature%2Fgitbutler-name"
     });
     expect(plan.registryUpdates[0]).toMatchObject({
       branch: "feature/gitbutler-name"
     });
     expect(plan.registryUpdates[0]).not.toHaveProperty("pendingBranch");
     expect(plan.warnings).toContain(
-      "GitButler branch name overrides pending Electron rename for feature/old-name."
+      "GitButler branch name overrides pending butmux rename for feature/old-name."
     );
   });
 });
@@ -1962,16 +1957,16 @@ describe("Kitty order planning", () => {
         ]
       },
       kittyTabs: [
-        { id: 1, title: "s_a_feature%2Fa", osWindowId: 100, index: 0 },
-        { id: 2, title: "s_a_feature%2Fb", osWindowId: 100, index: 1 },
-        { id: 3, title: "s_a_feature%2Fc", osWindowId: 100, index: 2 }
+        { id: 1, title: "bm_a_feature%2Fa", osWindowId: 100, index: 0 },
+        { id: 2, title: "bm_a_feature%2Fb", osWindowId: 100, index: 1 },
+        { id: 3, title: "bm_a_feature%2Fc", osWindowId: 100, index: 2 }
       ]
     });
 
     expect(moves).toEqual({
       commands: [
-        { type: "move_terminal_tab_backward", terminalTabTitle: "s_a_feature%2Fc" },
-        { type: "move_terminal_tab_backward", terminalTabTitle: "s_a_feature%2Fc" }
+        { type: "move_terminal_tab_backward", terminalTabTitle: "bm_a_feature%2Fc" },
+        { type: "move_terminal_tab_backward", terminalTabTitle: "bm_a_feature%2Fc" }
       ],
       warnings: []
     });
@@ -1990,9 +1985,9 @@ describe("Kitty order planning", () => {
         ]
       },
       kittyTabs: [
-        { id: 1, title: "s_a_feature%2Fa", osWindowId: 100, index: 0 },
+        { id: 1, title: "bm_a_feature%2Fa", osWindowId: 100, index: 0 },
         { id: 9, title: "shell", osWindowId: 100, index: 1 },
-        { id: 2, title: "s_a_feature%2Fb", osWindowId: 100, index: 2 }
+        { id: 2, title: "bm_a_feature%2Fb", osWindowId: 100, index: 2 }
       ]
     });
 

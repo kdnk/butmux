@@ -15,17 +15,16 @@ afterEach(async () => {
 
 describe("registry persistence", () => {
   it("returns an empty registry when the file does not exist", async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "seiton-registry-"));
+    tempDir = await mkdtemp(join(tmpdir(), "butmux-registry-"));
 
     await expect(loadRegistry(tempDir)).resolves.toEqual({
-      settings: { terminalBackend: "kitty" },
       projects: [],
       contexts: []
     });
   });
 
   it("saves registry JSON under the app data directory", async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "seiton-registry-"));
+    tempDir = await mkdtemp(join(tmpdir(), "butmux-registry-"));
 
     await saveRegistry(tempDir, {
       projects: [
@@ -45,8 +44,8 @@ describe("registry persistence", () => {
           projectRoot: "/repo/a",
           branch: "feature/a",
           branchKey: "feature%2Fa",
-          tmuxSession: "seiton__%2Frepo%2Fa__feature%2Fa",
-          terminalTabTitle: "seiton__%2Frepo%2Fa__feature%2Fa",
+          tmuxSession: "bm_a_feature%2Fa",
+          terminalTabTitle: "bm_a_feature%2Fa",
           order: 10,
           createdAt: "2026-04-24T10:00:00+09:00",
           updatedAt: "2026-04-24T10:00:00+09:00"
@@ -66,7 +65,7 @@ describe("registry persistence", () => {
   });
 
   it("drops the filesystem root and its scoped contexts when loading", async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "seiton-registry-"));
+    tempDir = await mkdtemp(join(tmpdir(), "butmux-registry-"));
 
     await saveRegistry(tempDir, {
       projects: [
@@ -91,8 +90,8 @@ describe("registry persistence", () => {
           projectRoot: "/repo/a",
           branch: "feature/a",
           branchKey: "feature%2Fa",
-          tmuxSession: "seiton__%2Frepo%2Fa__feature%2Fa",
-          terminalTabTitle: "seiton__%2Frepo%2Fa__feature%2Fa",
+          tmuxSession: "bm_a_feature%2Fa",
+          terminalTabTitle: "bm_a_feature%2Fa",
           order: 10,
           createdAt: "2026-04-24T10:00:00+09:00",
           updatedAt: "2026-04-24T10:00:00+09:00"
@@ -102,8 +101,8 @@ describe("registry persistence", () => {
           projectRoot: "/",
           branch: "feature/root",
           branchKey: "feature%2Froot",
-          tmuxSession: "seiton__%2F__feature%2Froot",
-          terminalTabTitle: "seiton__%2F__feature%2Froot",
+          tmuxSession: "bm_root_feature%2Froot",
+          terminalTabTitle: "bm_root_feature%2Froot",
           order: 20,
           createdAt: "2026-04-24T10:00:00+09:00",
           updatedAt: "2026-04-24T10:00:00+09:00"
@@ -112,7 +111,6 @@ describe("registry persistence", () => {
     });
 
     await expect(loadRegistry(tempDir)).resolves.toEqual({
-      settings: { terminalBackend: "kitty" },
       projects: [
         expect.objectContaining({ root: "/repo/a", order: 10 })
       ],
@@ -123,7 +121,7 @@ describe("registry persistence", () => {
   });
 
   it("loads legacy kitty tab titles into terminal tab titles", async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "seiton-registry-"));
+    tempDir = await mkdtemp(join(tmpdir(), "butmux-registry-"));
 
     await saveRegistry(tempDir, {
       projects: [
@@ -141,9 +139,9 @@ describe("registry persistence", () => {
           projectRoot: "/repo/a",
           branch: "feature/a",
           branchKey: "feature%2Fa",
-          tmuxSession: "seiton__%2Frepo%2Fa__feature%2Fa",
+          tmuxSession: "bm_a_feature%2Fa",
           // legacy persisted key
-          kittyTabTitle: "seiton__%2Frepo%2Fa__feature%2Fa",
+          kittyTabTitle: "bm_a_feature%2Fa",
           order: 10,
           createdAt: "2026-04-24T10:00:00+09:00",
           updatedAt: "2026-04-24T10:00:00+09:00"
@@ -152,11 +150,10 @@ describe("registry persistence", () => {
     });
 
     await expect(loadRegistry(tempDir)).resolves.toMatchObject({
-      settings: { terminalBackend: "kitty" },
       contexts: [
         expect.objectContaining({
           id: "ctx-legacy",
-          terminalTabTitle: "seiton__%2Frepo%2Fa__feature%2Fa"
+          terminalTabTitle: "bm_a_feature%2Fa"
         })
       ]
     });

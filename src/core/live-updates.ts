@@ -12,7 +12,7 @@ export type LiveUpdatePayload = {
 };
 
 export function getLiveUpdatePath(): string {
-  return join(homedir(), ".seiton", "live-update.json");
+  return join(homedir(), ".butmux", "live-update.json");
 }
 
 export async function emitLiveUpdate(payload: Omit<LiveUpdatePayload, "updatedAt">): Promise<void> {
