@@ -235,6 +235,20 @@ describe("TUI layout", () => {
     expect(lines[selectedLine + 1]).not.toContain("╰");
   });
 
+  it("marks the selected row with a left bullet", () => {
+    const output = renderToString(
+      <WorkbenchTable rows={buildWorkbenchRows([projectB])} selectedIndex={1} />,
+      { columns: 120 }
+    );
+    const lines = output.split("\n");
+    const workspaceLine = lines.find((line) => line.includes("workspace") && line.includes("b-workspace"));
+    const selectedLine = lines.find((line) => line.includes("branch") && line.includes("fix/path"));
+
+    expect(workspaceLine).toMatch(/│ {3}workspace/);
+    expect(workspaceLine).not.toContain("●");
+    expect(selectedLine).toMatch(/│ ● branch/);
+  });
+
   it("renders compact round frames with lazygit-style titles", () => {
     const output = renderWorkbenchLayout();
 
