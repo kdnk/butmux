@@ -9,7 +9,7 @@ It gives you one place to:
 - sync GitButler branches into managed tmux sessions and terminal tabs
 - focus a context, workspace session, or agent pane
 - rename contexts across GitButler, tmux, and the selected terminal backend
-- reorder projects and contexts from the keyboard
+- reorder managed contexts from the keyboard
 - remove orphan tmux and terminal state
 - inspect Codex and Claude panes per context
 
@@ -57,25 +57,23 @@ butmux
 Add the current directory from a shell:
 
 ```bash
-butmux open
+butmux add
 ```
 
 ## Keyboard
 
 ```text
 j/k or Up/Down     move selection
-h/l or Left/Right  switch pane
-Tab / Shift+Tab     cycle panes
-Enter              focus selected workspace, context, or pane
+Enter              focus selected workspace, branch, or agent
 r                  refresh
-s                  sync selected project
+s                  sync selected row's project
 a                  add project path
-b                   create independent branch
-B                   create dependent branch from selected context
-n                  rename selected managed context
-x                  remove selected project or orphan context after confirmation
-c                  create selected project's workspace session
-[ / ]              reorder selected project or context
+b                  create independent branch in selected row's project
+B                   create dependent branch from selected branch
+n                  rename selected managed branch
+x                  remove selected project or orphan branch after confirmation
+c                  create selected row's project workspace session
+[ / ]              reorder selected managed branch
 ,                  cycle terminal backend
 ?                  show help
 q or Ctrl+C        quit
@@ -83,14 +81,15 @@ q or Ctrl+C        quit
 
 ## Branch Creation
 
-Use `b` to create a new independent GitButler branch for the selected project.
+Use `b` to create a new independent GitButler branch for the selected row's
+project.
 butmux runs:
 
 ```text
 but branch new <name>
 ```
 
-Use `B` from a managed context row to create a dependent branch anchored to the
+Use `B` from a managed branch row to create a dependent branch anchored to the
 selected branch. butmux uses the selected GitButler branch id when available and
 falls back to the branch name. It runs:
 
@@ -247,9 +246,18 @@ The Codex marketplace file is:
 .agents/plugins/marketplace.json
 ```
 
-Install the `codex-butmux` plugin from the `butmux` marketplace in Codex, then
-start a new Codex session. Use `/hooks` in Codex to review and trust the plugin
-hooks if Codex asks for hook review.
+Add the GitHub marketplace and install the plugin with the Codex CLI:
+
+```bash
+codex plugin marketplace add kdnk/butmux
+codex plugin add codex-butmux@butmux
+```
+
+For local plugin development from a cloned checkout, use
+`codex plugin marketplace add .` from the repository root instead.
+
+Then start a new Codex session. Use `/hooks` in Codex to review and trust the
+plugin hooks if Codex asks for hook review.
 
 The plugin provides:
 
@@ -267,9 +275,18 @@ The Claude Code marketplace file is:
 .claude-plugin/marketplace.json
 ```
 
-Add this repository as a Claude Code plugin marketplace, install
-`claude-butmux`, then run `/reload-plugins` or start a new Claude Code session.
-Use `/hooks` in Claude Code to inspect the installed hook definitions.
+Add the GitHub marketplace and install the plugin with the Claude Code CLI:
+
+```bash
+claude plugin marketplace add kdnk/butmux
+claude plugin install claude-butmux@butmux
+```
+
+For local plugin development from a cloned checkout, use
+`claude plugin marketplace add .` from the repository root instead.
+
+Then run `/reload-plugins` or start a new Claude Code session. Use `/hooks` in
+Claude Code to inspect the installed hook definitions.
 
 The plugin provides:
 

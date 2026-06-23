@@ -841,6 +841,7 @@ function isCodexPane(currentCommand: string, startCommand: string, paneText: str
   if (haystack.includes("codex")) return true;
 
   const normalizedPaneText = paneText.toLowerCase();
+  if (isButmuxTuiOutput(normalizedPaneText)) return false;
   return (
     normalizedPaneText.includes("openai codex") ||
     normalizedPaneText.includes(">_ openai codex") ||
@@ -891,6 +892,9 @@ function isLiveCodexPane(currentCommand: string, startCommand: string, paneText:
   }
 
   const normalizedPaneText = paneText.toLowerCase();
+  if (isButmuxTuiOutput(normalizedPaneText) && !`${currentCommand} ${startCommand}`.toLowerCase().includes("codex")) {
+    return false;
+  }
   return (
     normalizedPaneText.includes("openai codex") ||
     normalizedPaneText.includes(">_ openai codex") ||
@@ -906,6 +910,10 @@ function isLiveClaudePane(currentCommand: string, startCommand: string, paneText
 
   const normalizedPaneText = paneText.toLowerCase();
   return normalizedPaneText.includes("claude code") && normalizedPaneText.includes("/help for help");
+}
+
+function isButmuxTuiOutput(normalizedPaneText: string): boolean {
+  return normalizedPaneText.includes("[0]-butmux") || normalizedPaneText.includes("[1]-workspaces");
 }
 
 

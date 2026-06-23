@@ -1,64 +1,62 @@
-import type { TuiPane } from "./state";
-
 export type KeyHint = readonly [string, string];
 
 export type KeyHintContext = {
-  pane: TuiPane;
-  hasProject: boolean;
-  hasContext: boolean;
+  hasRow: boolean;
+  hasWorkspaceRow: boolean;
   hasManagedContext: boolean;
+  hasRemovableOrphan: boolean;
+  canReorderContext: boolean;
 };
 
 export const helpRows = [
   ["j/k, arrows", "move selection"],
-  ["h/l, arrows", "switch pane"],
-  ["tab / shift+tab", "cycle panes"],
-  ["enter", "focus selected item"],
+  ["enter", "focus selected workspace, branch, or agent"],
   ["r", "refresh"],
-  ["s", "sync selected project"],
+  ["s", "sync selected row's project"],
   ["a", "add project path"],
-  ["b", "create independent branch"],
-  ["B", "create dependent branch from selected context"],
-  ["n", "rename context"],
-  ["x", "remove project or orphan"],
-  ["c", "create workspace session"],
-  ["[ / ]", "move project/context"],
+  ["b", "create independent branch in selected row's project"],
+  ["B", "create dependent branch from selected branch"],
+  ["n", "rename selected managed branch"],
+  ["x", "remove selected project or orphan branch"],
+  ["c", "create selected row's project workspace session"],
+  ["[ / ]", "move selected managed branch"],
   [",", "cycle terminal backend"],
   ["?", "toggle help"],
   ["q", "quit"]
 ] as const;
 
 export function keyHintsForContext(context: KeyHintContext): readonly KeyHint[] {
-  const common: readonly KeyHint[] = [
-    ["tab", "pane"],
+  const common: KeyHint[] = [
     ["j/k", "move"],
     ["r", "refresh"],
+    ["a", "add"],
+    [",", "backend"],
     ["?", "help"],
     ["q", "quit"]
   ];
-  const branchHints: readonly KeyHint[] = context.hasProject ? [["b", "new branch"]] : [];
 
-  if (context.pane === "projects") {
-    return [
-      ...branchHints,
-      ...(context.hasProject ? ([["s", "sync"], ["c", "workspace"], ["x", "remove"]] as const) : []),
-      ["a", "add project"],
-      ...common
-    ];
-  }
+  if (!context.hasRow) return common;
 
-  if (context.pane === "contexts") {
-    return [
-      ...(context.hasContext ? ([["enter", "focus"]] as const) : []),
-      ...branchHints,
-      ...(context.hasManagedContext ? ([["B", "branch from selected"], ["n", "rename"], ["[/]", "move"]] as const) : []),
-      ...common
-    ];
-  }
-
-  return [
-    ...(context.hasContext ? ([["enter", "focus pane"]] as const) : []),
-    ...branchHints,
-    ...common
+  const rowHints: KeyHint[] = [
+    ["enter", "focus"],
+    ["s", "sync project"],
+    ["b", "branch"],
+    ["c", "workspace"]
   ];
+
+  if (context.hasManagedContext) {
+    rowHints.push(["B", "dependent"], ["n", "rename"]);
+  }
+
+  if (context.canReorderContext) {
+    rowHints.push(["[/]", "move"]);
+  }
+
+  if (context.hasWorkspaceRow) {
+    rowHints.push(["x", "remove project"]);
+  } else if (context.hasRemovableOrphan) {
+    rowHints.push(["x", "remove orphan"]);
+  }
+
+  return [...rowHints, ...common];
 }

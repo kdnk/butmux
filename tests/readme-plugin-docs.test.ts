@@ -12,6 +12,10 @@ describe("plugin setup documentation", () => {
     expect(readme).toContain("## Plugin Hook Setup");
     expect(readme).toContain("codex-butmux");
     expect(readme).toContain("claude-butmux");
+    expect(readme).toContain("codex plugin marketplace add kdnk/butmux");
+    expect(readme).toContain("codex plugin add codex-butmux@butmux");
+    expect(readme).toContain("claude plugin marketplace add kdnk/butmux");
+    expect(readme).toContain("claude plugin install claude-butmux@butmux");
     expect(readme).toContain(".agents/plugins/marketplace.json");
     expect(readme).toContain(".claude-plugin/marketplace.json");
     expect(readme).toContain("BUTMUX_BIN");

@@ -1,9 +1,31 @@
 import type { AgentPane, Context, ProjectContexts, WorkspaceSession } from "../core/model";
 
-export type ContextRow =
-  | { type: "workspace"; label: string; workspace: WorkspaceSession }
-  | { type: "workspace-missing"; label: string; projectRoot: string }
-  | { type: "context"; label: string; context: Context };
+export type WorkbenchRowStatus = Context["status"] | WorkspaceSession["status"] | AgentPane["status"];
+
+type WorkbenchRowBase = {
+  project: ProjectContexts;
+  projectRoot: string;
+  projectName: string;
+  name: string;
+  status: WorkbenchRowStatus;
+  agentPanes: AgentPane[];
+};
+
+export type WorkbenchSessionRow =
+  | (WorkbenchRowBase & { type: "workspace"; workspace?: WorkspaceSession })
+  | (WorkbenchRowBase & { type: "context"; context: Context });
+
+export type WorkbenchPaneRow = WorkbenchRowBase & {
+  type: "pane";
+  pane: AgentPane;
+  parent: WorkbenchSessionRow;
+};
+
+export type WorkbenchRow = WorkbenchSessionRow | WorkbenchPaneRow;
+
+export type WorkbenchFocusTarget =
+  | { type: "workspace"; projectRoot: string; paneId?: string }
+  | { type: "context"; projectRoot: string; branchKey: string; paneId?: string };
 
 export type BranchPromptState =
   | { type: "create-branch"; value: string; projectRoot: string; mode: "independent" }
@@ -16,30 +38,51 @@ export type BranchPromptState =
       anchorLabel: string;
     };
 
-export function buildContextRows(project: ProjectContexts | undefined): ContextRow[] {
-  if (!project) return [];
-  const workspaceRow: ContextRow = project.workspaceSession
-    ? {
-        type: "workspace",
-        label: `workspace session  ${project.workspaceSession.status}`,
-        workspace: project.workspaceSession
-      }
-    : {
-        type: "workspace-missing",
-        label: "workspace session  missing",
-        projectRoot: project.project.root
-      };
-  return [
-    workspaceRow,
-    ...project.contexts.map((context) => ({
-      type: "context" as const,
-      label: `${context.branch}  ${context.status}${context.agentPanes.length > 0 ? `  ${context.agentPanes.length} agent` : ""}`,
-      context
-    }))
-  ];
+export function buildWorkbenchRows(projects: ProjectContexts[]): WorkbenchRow[] {
+  return projects.flatMap((project) => {
+    const workspace = project.workspaceSession;
+    const workspaceRow: WorkbenchSessionRow = workspace
+      ? {
+          type: "workspace",
+          project,
+          projectRoot: project.project.root,
+          projectName: project.project.name,
+          name: workspace.name,
+          status: workspace.status,
+          agentPanes: workspace.agentPanes,
+          workspace
+        }
+      : {
+          type: "workspace",
+          project,
+          projectRoot: project.project.root,
+          projectName: project.project.name,
+          name: project.project.name,
+          status: "missing_tmux",
+          agentPanes: []
+        };
+
+    return [
+      workspaceRow,
+      ...paneRowsFor(workspaceRow),
+      ...project.contexts.flatMap((context): WorkbenchRow[] => {
+        const contextRow: WorkbenchSessionRow = {
+          type: "context",
+          project,
+          projectRoot: project.project.root,
+          projectName: project.project.name,
+          name: context.branch,
+          status: context.status,
+          agentPanes: context.agentPanes,
+          context
+        };
+        return [contextRow, ...paneRowsFor(contextRow)];
+      })
+    ];
+  });
 }
 
-export function selectedBranchAnchor(row: ContextRow | undefined): { anchor: string; label: string } | undefined {
+export function selectedBranchAnchor(row: WorkbenchRow | undefined): { anchor: string; label: string } | undefined {
   if (row?.type !== "context") return undefined;
   return {
     anchor: row.context.branchId ?? row.context.branch,
@@ -47,17 +90,13 @@ export function selectedBranchAnchor(row: ContextRow | undefined): { anchor: str
   };
 }
 
-export function createBranchPrompt(
-  input: "b" | "B",
-  project: ProjectContexts | undefined,
-  row: ContextRow | undefined
-): BranchPromptState | undefined {
-  if (!project) return undefined;
+export function createBranchPrompt(input: "b" | "B", row: WorkbenchRow | undefined): BranchPromptState | undefined {
+  if (!row) return undefined;
   if (input === "b") {
     return {
       type: "create-branch",
       value: "",
-      projectRoot: project.project.root,
+      projectRoot: row.projectRoot,
       mode: "independent"
     };
   }
@@ -67,30 +106,127 @@ export function createBranchPrompt(
   return {
     type: "create-branch",
     value: "",
-    projectRoot: project.project.root,
+    projectRoot: row.projectRoot,
     mode: "dependent",
     anchor: branchAnchor.anchor,
     anchorLabel: branchAnchor.label
   };
 }
 
-export function statusColor(row: ContextRow): "green" | "yellow" | "red" | "white" {
-  const status = row.type === "context" ? row.context.status : row.type === "workspace" ? row.workspace.status : "missing_tmux";
-  if (status === "ready") return "green";
-  if (status === "missing_tmux" || status === "missing_terminal") return "yellow";
-  if (status === "orphan_tmux" || status === "error") return "red";
+export function statusColor(row: WorkbenchRow): "green" | "yellow" | "red" | "white" {
+  if (row.type === "pane") {
+    if (row.status === "error") return "red";
+    if (row.status === "waiting") return "yellow";
+    if (row.status === "running") return "green";
+    return "white";
+  }
+  if (row.status === "ready") return "green";
+  if (row.status === "missing_tmux" || row.status === "missing_terminal") return "yellow";
+  if (row.status === "orphan_tmux" || row.status === "error") return "red";
   return "white";
 }
 
-export function detailTitle(row: ContextRow): string {
-  if (row.type === "workspace") return `Workspace: ${row.workspace.name} (${row.workspace.status})`;
-  if (row.type === "workspace-missing") return "Workspace session is missing";
-  return `${row.context.branch} (${row.context.status})`;
+export function statusLabel(status: WorkbenchRowStatus): string {
+  const label = status.replaceAll("_", " ");
+  return `${statusSymbol(status)} ${label}`;
 }
 
-export function readAgentPanes(row: ContextRow | undefined): AgentPane[] {
-  if (!row) return [];
-  if (row.type === "workspace") return row.workspace.agentPanes;
-  if (row.type === "context") return row.context.agentPanes;
-  return [];
+function statusSymbol(status: WorkbenchRowStatus): string {
+  if (status === "ready") return "✅";
+  if (status === "running") return "⚡";
+  if (status === "idle") return "💤";
+  if (status === "waiting") return "⏳";
+  if (status === "missing_tmux" || status === "missing_terminal") return "⚠️";
+  if (status === "orphan_tmux") return "👻";
+  if (status === "error") return "❌";
+  return "•";
+}
+
+export function detailTitle(row: WorkbenchRow): string {
+  if (row.type === "pane") return `${row.pane.agent} ${row.pane.paneId} (${statusLabel(row.pane.status)})`;
+  if (row.type === "workspace") return `Workspace: ${row.name} (${statusLabel(row.status)})`;
+  return `${row.context.branch} (${statusLabel(row.context.status)})`;
+}
+
+export function readAgentPanes(row: WorkbenchRow | undefined): AgentPane[] {
+  if (row?.type === "pane") return [row.pane];
+  return row?.agentPanes ?? [];
+}
+
+export function agentSummary(row: WorkbenchRow): string {
+  if (row.type === "pane") return row.pane.lastLine || "-";
+  if (row.agentPanes.length > 0) return "";
+  return "-";
+}
+
+export function focusTargetForRow(row: WorkbenchRow | undefined): WorkbenchFocusTarget | undefined {
+  if (!row) return undefined;
+  if (row.type === "pane") {
+    return focusTargetForSessionRow(row.parent, row.pane.paneId);
+  }
+  return focusTargetForSessionRow(row);
+}
+
+export function toContextReorderIntent(
+  rows: WorkbenchRow[],
+  selectedIndex: number,
+  delta: -1 | 1
+): { projectRoot: string; from: number; to: number; nextRowIndex: number } | undefined {
+  const row = rows[selectedIndex];
+  if (row?.type !== "context") return undefined;
+
+  const contexts = row.project.contexts;
+  const from = contexts.findIndex((context) => context.id === row.context.id);
+  if (from === -1) return undefined;
+
+  const to = from + delta;
+  if (to < 0 || to >= contexts.length) return undefined;
+
+  const target = contexts[to];
+  const nextRowIndex = rows.findIndex(
+    (candidate) => candidate.type === "context" && candidate.context.id === target?.id
+  );
+  if (nextRowIndex === -1) return undefined;
+
+  return {
+    projectRoot: row.projectRoot,
+    from,
+    to,
+    nextRowIndex
+  };
+}
+
+function paneRowsFor(parent: WorkbenchSessionRow): WorkbenchPaneRow[] {
+  return parent.agentPanes.map((pane): WorkbenchPaneRow => ({
+    type: "pane",
+    project: parent.project,
+    projectRoot: parent.projectRoot,
+    projectName: parent.projectName,
+    name: `${pane.agent} ${pane.paneId}`,
+    status: pane.status,
+    agentPanes: [],
+    pane,
+    parent
+  }));
+}
+
+function focusTargetForSessionRow(
+  row: WorkbenchSessionRow,
+  paneId?: string
+): WorkbenchFocusTarget {
+  if (row.type === "workspace") {
+    const targetPaneId = paneId ?? row.workspace?.primaryPaneId;
+    return {
+      type: "workspace",
+      projectRoot: row.projectRoot,
+      ...(targetPaneId ? { paneId: targetPaneId } : {})
+    };
+  }
+  const targetPaneId = paneId ?? row.context.primaryPaneId;
+  return {
+    type: "context",
+    projectRoot: row.context.projectRoot,
+    branchKey: row.context.branchKey,
+    ...(targetPaneId ? { paneId: targetPaneId } : {})
+  };
 }

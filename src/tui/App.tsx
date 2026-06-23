@@ -2,20 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import type { AppService, AppState } from "../core/app-service";
 import { watchLiveUpdates } from "../core/live-updates";
-import type { AgentPane, Context, ProjectContexts } from "../core/model";
+import type { Context } from "../core/model";
 import { helpRows, keyHintsForContext } from "./keymap";
-import { ActivityStrip, KeyBar, PaneFrame, Shell } from "./layout";
+import { HeaderStatus, KeyBar, Shell, WorkbenchTable } from "./layout";
 import { startDebouncedLiveRefresh } from "./live-refresh";
 import {
-  buildContextRows,
+  buildWorkbenchRows,
   createBranchPrompt,
-  detailTitle,
-  readAgentPanes,
-  statusColor,
-  type BranchPromptState,
-  type ContextRow
+  focusTargetForRow,
+  toContextReorderIntent,
+  type BranchPromptState
 } from "./rows";
-import { clampSelection, cyclePane, moveSelection, switchPane, toReorderIntent, type TuiPane } from "./state";
+import { clampSelection, moveSelection } from "./state";
 
 type PromptState =
   | { type: "add-project"; value: string }
@@ -32,23 +30,21 @@ const emptyState: AppState = {
 export function TuiApp({ service }: { service: AppService }) {
   const { exit } = useApp();
   const [state, setState] = useState<AppState>(emptyState);
-  const [pane, setPane] = useState<TuiPane>("projects");
-  const [projectIndex, setProjectIndex] = useState(0);
-  const [contextIndex, setContextIndex] = useState(0);
+  const [rowIndex, setRowIndex] = useState(0);
   const [busy, setBusy] = useState<string | undefined>("loading");
   const [error, setError] = useState<string | undefined>();
   const [lastSync, setLastSync] = useState<string | undefined>();
   const [helpOpen, setHelpOpen] = useState(false);
   const [prompt, setPrompt] = useState<PromptState | undefined>();
 
-  const selectedProject = state.projectsWithContexts[projectIndex];
-  const contextRows = useMemo(() => buildContextRows(selectedProject), [selectedProject]);
-  const selectedContextRow = contextRows[contextIndex];
+  const rows = useMemo(() => buildWorkbenchRows(state.projectsWithContexts), [state.projectsWithContexts]);
+  const selectedRow = rows[rowIndex];
   const keyHints = keyHintsForContext({
-    pane,
-    hasProject: Boolean(selectedProject),
-    hasContext: Boolean(selectedContextRow),
-    hasManagedContext: selectedContextRow?.type === "context"
+    hasRow: Boolean(selectedRow),
+    hasWorkspaceRow: selectedRow?.type === "workspace",
+    hasManagedContext: selectedRow?.type === "context",
+    hasRemovableOrphan: selectedRow?.type === "context" && selectedRow.context.status === "orphan_tmux",
+    canReorderContext: selectedRow?.type === "context" && selectedRow.project.contexts.length > 1
   });
 
   async function runAction(label: string, action: () => Promise<AppState | void>) {
@@ -79,12 +75,8 @@ export function TuiApp({ service }: { service: AppService }) {
   }, [busy]);
 
   useEffect(() => {
-    setProjectIndex((current) => clampSelection(current, state.projectsWithContexts.length));
-  }, [state.projectsWithContexts.length]);
-
-  useEffect(() => {
-    setContextIndex((current) => clampSelection(current, contextRows.length));
-  }, [contextRows.length]);
+    setRowIndex((current) => clampSelection(current, rows.length));
+  }, [rows.length]);
 
   useInput((input, key) => {
     if (prompt) {
@@ -98,18 +90,6 @@ export function TuiApp({ service }: { service: AppService }) {
     }
     if (input === "?") {
       setHelpOpen((open) => !open);
-      return;
-    }
-    if (key.tab) {
-      setPane((current) => cyclePane(current, key.shift ? -1 : 1));
-      return;
-    }
-    if (key.leftArrow || input === "h") {
-      setPane((current) => switchPane(current, "left"));
-      return;
-    }
-    if (key.rightArrow || input === "l") {
-      setPane((current) => switchPane(current, "right"));
       return;
     }
     if (key.upArrow || input === "k") {
@@ -133,32 +113,32 @@ export function TuiApp({ service }: { service: AppService }) {
       return;
     }
     if (input === "b" || input === "B") {
-      const branchPrompt = createBranchPrompt(input, selectedProject, selectedContextRow);
+      const branchPrompt = createBranchPrompt(input, selectedRow);
       if (branchPrompt) setPrompt(branchPrompt);
       return;
     }
     if (input === "n") {
-      if (selectedContextRow?.type === "context") {
+      if (selectedRow?.type === "context") {
         setPrompt({
           type: "rename-context",
-          value: selectedContextRow.context.branch,
-          context: selectedContextRow.context
+          value: selectedRow.context.branch,
+          context: selectedRow.context
         });
       }
       return;
     }
     if (input === "x") {
-      if (pane === "projects" && selectedProject) {
-        setPrompt({ type: "confirm-remove-project", projectRoot: selectedProject.project.root });
-      } else if (selectedContextRow?.type === "context" && selectedContextRow.context.status === "orphan_tmux") {
-        setPrompt({ type: "confirm-remove-orphan", context: selectedContextRow.context });
+      if (selectedRow?.type === "workspace") {
+        setPrompt({ type: "confirm-remove-project", projectRoot: selectedRow.projectRoot });
+      } else if (selectedRow?.type === "context" && selectedRow.context.status === "orphan_tmux") {
+        setPrompt({ type: "confirm-remove-orphan", context: selectedRow.context });
       }
       return;
     }
     if (input === "c") {
-      if (selectedProject) {
+      if (selectedRow) {
         void runAction("creating workspace session", async () =>
-          await service.createWorkspaceSession(selectedProject.project.root)
+          await service.createWorkspaceSession(selectedRow.projectRoot)
         );
       }
       return;
@@ -241,17 +221,13 @@ export function TuiApp({ service }: { service: AppService }) {
   }
 
   function moveActiveSelection(delta: -1 | 1) {
-    if (pane === "projects") {
-      setProjectIndex((current) => moveSelection(current, delta, state.projectsWithContexts.length));
-    } else {
-      setContextIndex((current) => moveSelection(current, delta, contextRows.length));
-    }
+    setRowIndex((current) => moveSelection(current, delta, rows.length));
   }
 
   async function syncSelectedProject() {
-    if (!selectedProject) return;
+    if (!selectedRow) return;
     await runAction("syncing", async () => {
-      const next = await service.syncProject(selectedProject.project.root);
+      const next = await service.syncProject(selectedRow.projectRoot);
       setLastSync(`${next.commands.length} commands`);
       return next;
     });
@@ -268,169 +244,77 @@ export function TuiApp({ service }: { service: AppService }) {
   }
 
   async function reorderSelected(delta: -1 | 1) {
-    if (pane === "projects") {
-      const intent = toReorderIntent(pane, projectIndex, delta, state.projectsWithContexts.length);
-      if (!intent) return;
-      setProjectIndex(intent.to);
-      await runAction("reordering projects", async () => await service.reorderProjects(intent.from, intent.to));
-      return;
-    }
-
-    if (pane === "contexts" && selectedProject) {
-      const managedOffset = contextRows.findIndex((row) => row.type === "context");
-      if (managedOffset === -1 || contextIndex < managedOffset) return;
-      const managedIndex = contextIndex - managedOffset;
-      const managedCount = selectedProject.contexts.length;
-      const intent = toReorderIntent("contexts", managedIndex, delta, managedCount);
-      if (!intent) return;
-      setContextIndex(managedOffset + intent.to);
-      await runAction("reordering contexts", async () =>
-        await service.reorderContexts(selectedProject.project.root, intent.from, intent.to)
-      );
-    }
+    const intent = toContextReorderIntent(rows, rowIndex, delta);
+    if (!intent) return;
+    setRowIndex(intent.nextRowIndex);
+    await runAction("reordering contexts", async () =>
+      await service.reorderContexts(intent.projectRoot, intent.from, intent.to)
+    );
   }
 
   async function focusSelected() {
-    if (selectedContextRow?.type === "workspace") {
+    const focusTarget = focusTargetForRow(selectedRow);
+    if (!focusTarget) return;
+
+    if (selectedRow?.type === "workspace") {
+      if (!selectedRow.workspace) {
+        await runAction("creating workspace session", async () =>
+          await service.createWorkspaceSession(selectedRow.projectRoot)
+        );
+        return;
+      }
+    }
+
+    if (focusTarget.type === "workspace") {
       await runAction("focusing workspace", async () => {
         await service.focusWorkspaceSession({
-          projectRoot: selectedContextRow.workspace.projectRoot,
-          ...(selectedContextRow.workspace.primaryPaneId ? { paneId: selectedContextRow.workspace.primaryPaneId } : {})
+          projectRoot: focusTarget.projectRoot,
+          ...(focusTarget.paneId ? { paneId: focusTarget.paneId } : {})
         });
       });
       return;
     }
-    if (selectedContextRow?.type === "workspace-missing") {
-      await runAction("creating workspace session", async () =>
-        await service.createWorkspaceSession(selectedContextRow.projectRoot)
-      );
-      return;
-    }
-    if (selectedContextRow?.type === "context") {
-      await runAction("focusing context", async () => {
-        await service.focusContext({
-          projectRoot: selectedContextRow.context.projectRoot,
-          branchKey: selectedContextRow.context.branchKey,
-          ...(selectedContextRow.context.primaryPaneId ? { paneId: selectedContextRow.context.primaryPaneId } : {})
-        });
+
+    await runAction("focusing context", async () => {
+      await service.focusContext({
+        projectRoot: focusTarget.projectRoot,
+        branchKey: focusTarget.branchKey,
+        ...(focusTarget.paneId ? { paneId: focusTarget.paneId } : {})
       });
-    }
+    });
   }
 
   return (
     <Shell
-      header={<Header busy={busy} lastSync={lastSync} />}
-      activity={<ActivityStrip error={error} busy={busy} lastSync={lastSync} warnings={state.warnings} />}
+      header={<Header error={error} busy={busy} lastSync={lastSync} warnings={state.warnings} />}
       keyBar={<KeyBar rows={keyHints} />}
     >
-      <Box gap={2}>
-        <ProjectsPane
-          active={pane === "projects"}
-          projects={state.projectsWithContexts}
-          selectedIndex={projectIndex}
-        />
-        <ContextsPane
-          active={pane === "contexts"}
-          rows={contextRows}
-          selectedIndex={contextIndex}
-        />
-        <DetailPane
-          active={pane === "detail"}
-          state={state}
-          project={selectedProject}
-          row={selectedContextRow}
-        />
-      </Box>
+      <WorkbenchTable rows={rows} selectedIndex={rowIndex} />
       {helpOpen ? <HelpOverlay /> : null}
       {prompt ? <PromptView prompt={prompt} /> : null}
     </Shell>
   );
 }
 
-function Header({ busy, lastSync }: { busy: string | undefined; lastSync: string | undefined }) {
+function Header({
+  error,
+  busy,
+  lastSync,
+  warnings
+}: {
+  error: string | undefined;
+  busy: string | undefined;
+  lastSync: string | undefined;
+  warnings: string[];
+}) {
   return (
     <Box gap={2}>
-      <Text bold color="cyan">butmux</Text>
       <Text dimColor>r refresh</Text>
       <Text dimColor>s sync</Text>
       <Text dimColor>a add</Text>
       <Text dimColor>? help</Text>
-      {lastSync ? <Text color="green">{lastSync}</Text> : null}
-      {busy ? <Text color="yellow">{busy}</Text> : null}
+      <HeaderStatus error={error} busy={busy} lastSync={lastSync} warnings={warnings} />
     </Box>
-  );
-}
-
-function ProjectsPane({
-  active,
-  projects,
-  selectedIndex
-}: {
-  active: boolean;
-  projects: ProjectContexts[];
-  selectedIndex: number;
-}) {
-  return (
-    <PaneFrame title="Projects" active={active} width="25%">
-      {projects.length === 0 ? <Text dimColor>No projects</Text> : null}
-      {projects.map((project, index) => (
-        <Text key={project.project.root} color={index === selectedIndex ? "cyan" : "white"}>
-          {index === selectedIndex ? "> " : "  "}{project.project.name}
-        </Text>
-      ))}
-    </PaneFrame>
-  );
-}
-
-function ContextsPane({
-  active,
-  rows,
-  selectedIndex
-}: {
-  active: boolean;
-  rows: ContextRow[];
-  selectedIndex: number;
-}) {
-  return (
-    <PaneFrame title="Contexts" active={active} width="40%">
-      {rows.length === 0 ? <Text dimColor>No contexts</Text> : null}
-      {rows.map((row, index) => (
-        <Text key={`${row.type}:${row.label}`} color={index === selectedIndex ? "cyan" : statusColor(row)}>
-          {index === selectedIndex ? "> " : "  "}{row.label}
-        </Text>
-      ))}
-    </PaneFrame>
-  );
-}
-
-function DetailPane({
-  active,
-  state,
-  project,
-  row
-}: {
-  active: boolean;
-  state: AppState;
-  project: ProjectContexts | undefined;
-  row: ContextRow | undefined;
-}) {
-  const panes = readAgentPanes(row);
-  return (
-    <PaneFrame title="Detail" active={active} flexGrow={1}>
-      {state.warnings.map((warning, index) => (
-        <Text key={`global-warning-${index}`} color="yellow">! {warning}</Text>
-      ))}
-      {project?.warnings?.map((warning, index) => (
-        <Text key={`project-warning-${index}`} color="yellow">! {warning}</Text>
-      ))}
-      {row ? <Text>{detailTitle(row)}</Text> : <Text dimColor>No selection</Text>}
-      {panes.length > 0 ? <Text dimColor>agents</Text> : null}
-      {panes.map((pane) => (
-        <Text key={pane.paneId} color={agentColor(pane)}>
-          {pane.agent} {pane.paneId} {pane.status} {pane.lastLine}
-        </Text>
-      ))}
-    </PaneFrame>
   );
 }
 
@@ -445,7 +329,7 @@ function HelpOverlay() {
   );
 }
 
-function PromptView({ prompt }: { prompt: PromptState }) {
+export function PromptView({ prompt }: { prompt: PromptState }) {
   if (prompt.type === "confirm-remove-project") {
     return <Text color="yellow">Press Enter to remove project {prompt.projectRoot}, Esc to cancel.</Text>;
   }
@@ -457,19 +341,29 @@ function PromptView({ prompt }: { prompt: PromptState }) {
       <Box flexDirection="column">
         <Text color="yellow">{prompt.mode === "dependent" ? "New dependent GitButler branch" : "New GitButler branch"}</Text>
         {prompt.mode === "dependent" ? <Text>Anchor: {prompt.anchorLabel}</Text> : <Text>Type: independent</Text>}
-        <Text>Name: {prompt.value}</Text>
+        <EditablePromptLine label="Name" value={prompt.value} />
       </Box>
     );
   }
   const label = prompt.type === "add-project" ? "Project path" : "New branch";
-  return <Text color="yellow">{label}: {prompt.value}</Text>;
+  return <EditablePromptLine label={label} value={prompt.value} color="yellow" />;
 }
 
-function agentColor(pane: AgentPane): "green" | "yellow" | "red" | "white" {
-  if (pane.status === "running") return "green";
-  if (pane.status === "waiting") return "yellow";
-  if (pane.status === "error") return "red";
-  return "white";
+function EditablePromptLine({
+  label,
+  value,
+  color
+}: {
+  label: string;
+  value: string;
+  color?: "yellow";
+}) {
+  return (
+    <Text {...(color ? { color } : {})}>
+      {label}: {value}
+      <Text color="cyan">▌</Text>
+    </Text>
+  );
 }
 
 function formatError(error: unknown): string {

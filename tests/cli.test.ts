@@ -50,10 +50,10 @@ describe("runCli", () => {
     )).toBe(true);
   });
 
-  it("adds the current working directory for butmux open", async () => {
+  it("adds the current working directory for butmux add", async () => {
     const { deps, saved, outputs } = createDeps();
 
-    const exitCode = await runCli(["node", "butmux", "open"], deps);
+    const exitCode = await runCli(["node", "butmux", "add"], deps);
 
     expect(exitCode).toBe(0);
     expect(deps.loadRegistry).toHaveBeenCalledWith("/tmp/butmux-state/butmux");
@@ -72,11 +72,11 @@ describe("runCli", () => {
     });
     expect(deps.emitLiveUpdate).toHaveBeenCalledWith({
       agent: "butmux",
-      event: "open",
+      event: "add",
       paneId: "cli",
       cwd: "/repo/a"
     });
-    expect(outputs.stdout.join("")).toContain("Opened /repo/a in butmux.");
+    expect(outputs.stdout.join("")).toContain("Added /repo/a to butmux.");
   });
 
   it("does not add the filesystem root as a project", async () => {
@@ -84,7 +84,7 @@ describe("runCli", () => {
       cwd: "/"
     });
 
-    const exitCode = await runCli(["node", "butmux", "open"], deps);
+    const exitCode = await runCli(["node", "butmux", "add"], deps);
 
     expect(exitCode).toBe(1);
     expect(deps.saveRegistry).not.toHaveBeenCalled();
@@ -108,12 +108,22 @@ describe("runCli", () => {
       })
     });
 
-    const exitCode = await runCli(["node", "butmux", "open"], deps);
+    const exitCode = await runCli(["node", "butmux", "add"], deps);
 
     expect(exitCode).toBe(0);
     expect(deps.saveRegistry).not.toHaveBeenCalled();
     expect(deps.emitLiveUpdate).not.toHaveBeenCalled();
     expect(outputs.stdout.join("")).toContain("Project already exists in butmux: /repo/a");
+  });
+
+  it("does not accept the old butmux open command", async () => {
+    const { deps, outputs } = createDeps();
+
+    const exitCode = await runCli(["node", "butmux", "open"], deps);
+
+    expect(exitCode).toBe(1);
+    expect(deps.saveRegistry).not.toHaveBeenCalled();
+    expect(outputs.stderr.join("")).toContain("Usage: butmux add");
   });
 
   it("keeps the hook command behavior", async () => {
@@ -153,6 +163,7 @@ describe("runCli", () => {
     expect(exitCode).toBe(1);
     expect(outputs.stderr.join("")).toContain("Usage: butmux hook <agent> <event>");
     expect(outputs.stderr.join("")).toContain("Usage: butmux notify <message>");
-    expect(outputs.stderr.join("")).toContain("Usage: butmux open");
+    expect(outputs.stderr.join("")).toContain("Usage: butmux add");
+    expect(outputs.stderr.join("")).not.toContain("Usage: butmux open");
   });
 });
