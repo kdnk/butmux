@@ -1,5 +1,6 @@
 import {
   applySyncCommand as applySyncCommandDefault,
+  createGitButlerBranch as createGitButlerBranchDefault,
   createWorkspaceSession as createWorkspaceSessionDefault,
   focusContext as focusContextDefault,
   focusWorkspaceSession as focusWorkspaceSessionDefault,
@@ -8,6 +9,7 @@ import {
   readSystemSnapshotForCwd as readSystemSnapshotForCwdDefault,
   removeOrphanContext as removeOrphanContextDefault,
   renameManagedContext as renameManagedContextDefault,
+  type CreateGitButlerBranchInput,
   type FullSystemSnapshot,
   type RemoveOrphanInput,
   type SystemSnapshot
@@ -45,12 +47,19 @@ export type RenameContextInput = {
   newBranch: string;
 };
 
+export type CreateBranchInput = {
+  projectRoot: string;
+  name: string;
+  anchor?: string;
+};
+
 export type AppService = {
   refresh(): Promise<AppState>;
   sync(): Promise<AppState & { commands: SyncCommand[] }>;
   syncProject(root: string): Promise<AppState & { commands: SyncCommand[] }>;
   addProjectRoot(root: string): Promise<AppState>;
   removeProjectRoot(root: string): Promise<AppState>;
+  createBranch(input: CreateBranchInput): Promise<AppState & { commands: SyncCommand[]; branchName: string }>;
   createWorkspaceSession(projectRoot: string): Promise<AppState>;
   focusContext(input: { projectRoot: string; branchKey: string; paneId?: string }): Promise<void>;
   focusWorkspaceSession(input: { projectRoot: string; paneId?: string }): Promise<void>;
@@ -79,6 +88,7 @@ export type AppServiceDeps = {
   focusContext: typeof focusContextDefault;
   focusWorkspaceSession: typeof focusWorkspaceSessionDefault;
   createWorkspaceSession: typeof createWorkspaceSessionDefault;
+  createGitButlerBranch: (input: CreateGitButlerBranchInput) => Promise<void>;
   renameManagedContext: typeof renameManagedContextDefault;
   removeOrphanContext: typeof removeOrphanContextDefault;
 };
@@ -99,6 +109,7 @@ export function createAppService(options: CreateAppServiceOptions): AppService {
     focusContext: options.focusContext ?? focusContextDefault,
     focusWorkspaceSession: options.focusWorkspaceSession ?? focusWorkspaceSessionDefault,
     createWorkspaceSession: options.createWorkspaceSession ?? createWorkspaceSessionDefault,
+    createGitButlerBranch: options.createGitButlerBranch ?? createGitButlerBranchDefault,
     renameManagedContext: options.renameManagedContext ?? renameManagedContextDefault,
     removeOrphanContext: options.removeOrphanContext ?? removeOrphanContextDefault
   };
@@ -249,6 +260,34 @@ export function createAppService(options: CreateAppServiceOptions): AppService {
       const registry = await loadRegistry(options.stateDir);
       await saveRegistry(options.stateDir, removeProject({ registry, root }));
       return await getFullState();
+    },
+
+    async createBranch(input) {
+      const branchName = input.name.trim();
+      if (!branchName) {
+        throw new Error("Branch name cannot be empty");
+      }
+
+      const backend = await readBackend();
+      const snapshot = await deps.readSystemSnapshotForCwd(input.projectRoot, backend);
+      if (snapshot.branches.some((branch) => branch.name === branchName)) {
+        throw new Error(`Branch already exists: ${branchName}`);
+      }
+
+      const anchor = input.anchor?.trim();
+      await deps.createGitButlerBranch({
+        projectRoot: input.projectRoot,
+        name: branchName,
+        ...(anchor ? { anchor } : {})
+      });
+
+      const result = await syncProjectRoot(input.projectRoot);
+      const state = buildAppState(
+        result.registry,
+        await deps.readFullSystemSnapshot(orderedProjectRoots(result.registry), await readBackend()),
+        { [input.projectRoot]: result.projectWarnings }
+      );
+      return { ...state, commands: result.commands, branchName };
     },
 
     async createWorkspaceSession(projectRoot: string) {

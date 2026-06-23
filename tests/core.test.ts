@@ -23,6 +23,7 @@ import {
   getTerminalBackend,
   readAgentPanesFromTmux,
   readAgentPanesFromTmuxOptions,
+  createGitButlerBranch,
   createWorkspaceSession,
   focusContext,
   focusWorkspaceSession,
@@ -1629,6 +1630,34 @@ describe("removing orphan contexts", () => {
 });
 
 describe("renaming managed contexts", () => {
+  it("creates independent and dependent GitButler branches", async () => {
+    const calls: Array<{ file: string; args: string[]; cwd: string }> = [];
+    const exec: ExecFunction = async (file, args, cwd) => {
+      calls.push({ file, args, cwd });
+      return { stdout: "", stderr: "" };
+    };
+
+    await createGitButlerBranch({ projectRoot: "/repo/a", name: "feature/independent" }, "/repo/a", exec);
+    await createGitButlerBranch(
+      { projectRoot: "/repo/a", name: "feature/child", anchor: "feature/base" },
+      "/repo/a",
+      exec
+    );
+
+    expect(calls).toEqual([
+      {
+        file: "but",
+        args: ["branch", "new", "feature/independent"],
+        cwd: "/repo/a"
+      },
+      {
+        file: "but",
+        args: ["branch", "new", "feature/child", "-a", "feature/base"],
+        cwd: "/repo/a"
+      }
+    ]);
+  });
+
   it("renames gitbutler branch, tmux session, and kitty tab together", async () => {
     const calls: Array<{ file: string; args: string[]; cwd: string }> = [];
     const exec: ExecFunction = async (file, args, cwd) => {

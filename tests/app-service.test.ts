@@ -38,7 +38,20 @@ function emptySystemSnapshot(overrides: Partial<SystemSnapshot> = {}): SystemSna
   };
 }
 
-async function createTempService() {
+function fullSnapshotWithBranches(
+  projectRoots: string[],
+  branchesByRoot: Record<string, SystemSnapshot["branches"]>
+): FullSystemSnapshot {
+  return {
+    ...emptyFullSnapshot(projectRoots),
+    projects: Object.fromEntries(projectRoots.map((root) => [
+      root,
+      { branches: branchesByRoot[root] ?? [], warnings: [] }
+    ]))
+  };
+}
+
+async function createTempService(overrides: Partial<Parameters<typeof createAppService>[0]> = {}) {
   tempDir = await mkdtemp(join(tmpdir(), "butmux-service-"));
   const configDir = join(tempDir, "config");
   const stateDir = join(tempDir, "state");
@@ -56,7 +69,8 @@ async function createTempService() {
     focusWorkspaceSession: vi.fn(async () => undefined),
     createWorkspaceSession: vi.fn(async () => undefined),
     renameManagedContext: vi.fn(async () => undefined),
-    removeOrphanContext: vi.fn(async () => undefined)
+    removeOrphanContext: vi.fn(async () => undefined),
+    ...overrides
   });
   return { service, configDir, stateDir, readFullSystemSnapshot, readSystemSnapshotForCwd, applySyncCommand };
 }
@@ -193,5 +207,92 @@ describe("createAppService", () => {
 
     expect(state.commands).toContainEqual(command);
     expect(state.projectsWithContexts[0]?.warnings).toContain("create_tmux_session failed: tmux failed");
+  });
+
+  it("creates an independent GitButler branch and syncs the project", async () => {
+    const createGitButlerBranch = vi.fn(async () => undefined);
+    const { service, readFullSystemSnapshot, readSystemSnapshotForCwd, applySyncCommand } = await createTempService({
+      createGitButlerBranch
+    });
+    await service.addProjectRoot("/repo/a");
+    readSystemSnapshotForCwd.mockResolvedValueOnce(emptySystemSnapshot());
+    readSystemSnapshotForCwd.mockResolvedValueOnce(emptySystemSnapshot({
+      branches: [{ name: "feature/new-work" }]
+    }));
+    readFullSystemSnapshot.mockImplementation(async (roots: string[]) =>
+      fullSnapshotWithBranches(roots, { "/repo/a": [{ name: "feature/new-work" }] })
+    );
+
+    const state = await service.createBranch({
+      projectRoot: "/repo/a",
+      name: " feature/new-work "
+    });
+
+    expect(createGitButlerBranch).toHaveBeenCalledWith({
+      projectRoot: "/repo/a",
+      name: "feature/new-work"
+    });
+    expect(state.branchName).toBe("feature/new-work");
+    expect(state.projectsWithContexts[0]?.contexts[0]).toMatchObject({
+      branch: "feature/new-work",
+      status: "missing_tmux"
+    });
+    expect(state.commands).toContainEqual({
+      type: "create_tmux_session",
+      branch: "feature/new-work",
+      tmuxSession: "bm_a_feature%2Fnew-work"
+    });
+    expect(applySyncCommand).toHaveBeenCalled();
+  });
+
+  it("creates a dependent GitButler branch with an anchor", async () => {
+    const createGitButlerBranch = vi.fn(async () => undefined);
+    const { service, readFullSystemSnapshot, readSystemSnapshotForCwd } = await createTempService({
+      createGitButlerBranch
+    });
+    await service.addProjectRoot("/repo/a");
+    readSystemSnapshotForCwd.mockResolvedValueOnce(emptySystemSnapshot());
+    readSystemSnapshotForCwd.mockResolvedValueOnce(emptySystemSnapshot({
+      branches: [{ name: "feature/child" }]
+    }));
+    readFullSystemSnapshot.mockImplementation(async (roots: string[]) =>
+      fullSnapshotWithBranches(roots, { "/repo/a": [{ name: "feature/child" }] })
+    );
+
+    const state = await service.createBranch({
+      projectRoot: "/repo/a",
+      name: "feature/child",
+      anchor: "feature/base"
+    });
+
+    expect(createGitButlerBranch).toHaveBeenCalledWith({
+      projectRoot: "/repo/a",
+      name: "feature/child",
+      anchor: "feature/base"
+    });
+    expect(state.branchName).toBe("feature/child");
+  });
+
+  it("rejects empty and duplicate branch names before creating a branch", async () => {
+    const createGitButlerBranch = vi.fn(async () => undefined);
+    const { service, readSystemSnapshotForCwd } = await createTempService({
+      createGitButlerBranch
+    });
+    await service.addProjectRoot("/repo/a");
+
+    await expect(service.createBranch({
+      projectRoot: "/repo/a",
+      name: " "
+    })).rejects.toThrow("Branch name cannot be empty");
+    expect(createGitButlerBranch).not.toHaveBeenCalled();
+
+    readSystemSnapshotForCwd.mockResolvedValueOnce(emptySystemSnapshot({
+      branches: [{ name: "feature/existing" }]
+    }));
+    await expect(service.createBranch({
+      projectRoot: "/repo/a",
+      name: "feature/existing"
+    })).rejects.toThrow("Branch already exists: feature/existing");
+    expect(createGitButlerBranch).not.toHaveBeenCalled();
   });
 });
