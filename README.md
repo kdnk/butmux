@@ -7,9 +7,9 @@ It gives you one place to:
 - add and switch project directories
 - create independent or dependent GitButler branches from the TUI
 - sync GitButler branches into managed tmux sessions and terminal tabs
-- focus a context, workspace session, or agent pane
+- focus a context or workspace session
 - rename contexts across GitButler, tmux, and the selected terminal backend
-- reorder projects and contexts from the keyboard
+- reorder managed contexts from the keyboard
 - remove orphan tmux and terminal state
 - inspect Codex and Claude panes per context
 
@@ -64,18 +64,16 @@ butmux open
 
 ```text
 j/k or Up/Down     move selection
-h/l or Left/Right  switch pane
-Tab / Shift+Tab     cycle panes
-Enter              focus selected workspace, context, or pane
+Enter              focus selected workspace or context
 r                  refresh
-s                  sync selected project
+s                  sync selected row's project
 a                  add project path
-b                   create independent branch
+b                  create independent branch in selected row's project
 B                   create dependent branch from selected context
 n                  rename selected managed context
 x                  remove selected project or orphan context after confirmation
-c                  create selected project's workspace session
-[ / ]              reorder selected project or context
+c                  create selected row's project workspace session
+[ / ]              reorder selected managed context
 ,                  cycle terminal backend
 ?                  show help
 q or Ctrl+C        quit
@@ -83,7 +81,8 @@ q or Ctrl+C        quit
 
 ## Branch Creation
 
-Use `b` to create a new independent GitButler branch for the selected project.
+Use `b` to create a new independent GitButler branch for the selected row's
+project.
 butmux runs:
 
 ```text
