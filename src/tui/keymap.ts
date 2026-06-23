@@ -10,16 +10,16 @@ export type KeyHintContext = {
 
 export const helpRows = [
   ["j/k, arrows", "move selection"],
-  ["enter", "focus selected workspace, context, or pane"],
+  ["enter", "focus selected workspace, branch, or agent"],
   ["r", "refresh"],
   ["s", "sync selected row's project"],
   ["a", "add project path"],
   ["b", "create independent branch in selected row's project"],
-  ["B", "create dependent branch from selected context"],
-  ["n", "rename selected managed context"],
-  ["x", "remove selected project or orphan"],
+  ["B", "create dependent branch from selected branch"],
+  ["n", "rename selected managed branch"],
+  ["x", "remove selected project or orphan branch"],
   ["c", "create selected row's project workspace session"],
-  ["[ / ]", "move selected managed context"],
+  ["[ / ]", "move selected managed branch"],
   [",", "cycle terminal backend"],
   ["?", "toggle help"],
   ["q", "quit"]

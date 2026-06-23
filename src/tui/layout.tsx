@@ -64,7 +64,7 @@ export function WorkbenchTable({
 }) {
   return (
     <Frame title="[1]-Workspaces" borderColor="cyan">
-      <Text bold color="cyan">{formatTableRow("Project", "Type", "Name", "Status", "Agents")}</Text>
+      <Text bold color="cyan">{formatTableRow("Kind", "Name", "Status", "Agents")}</Text>
       {rows.length === 0 ? <Text dimColor>No projects</Text> : null}
       {rows.map((row, index) => {
         const selected = index === selectedIndex;
@@ -94,24 +94,19 @@ function TableRow({
   row: WorkbenchRow;
   selected: boolean;
 }) {
-  const content = (
-    <Text color={statusColor(row)} wrap="truncate">
+  return (
+    <Text
+      color={selected ? "cyan" : statusColor(row)}
+      inverse={selected}
+      wrap="truncate"
+    >
       {formatTableRow(
-        row.type === "pane" ? "" : row.projectName,
-        row.type,
+        rowKindLabel(row),
         row.name,
         statusLabel(row.status),
         agentSummary(row)
       )}
     </Text>
-  );
-
-  if (!selected) return content;
-
-  return (
-    <Box width="100%" borderStyle="round" borderColor="cyan">
-      {content}
-    </Box>
   );
 }
 
@@ -151,14 +146,19 @@ function Frame({
   );
 }
 
-function formatTableRow(project: string, type: string, name: string, status: string, agents: string): string {
+function formatTableRow(kind: string, name: string, status: string, agents: string): string {
   return [
-    pad(project, 14),
-    pad(type, 10),
-    pad(name, 30),
+    pad(kind, 10),
+    pad(name, 38),
     pad(status, 17),
     agents
   ].join(" ");
+}
+
+function rowKindLabel(row: WorkbenchRow): string {
+  if (row.type === "context") return "branch";
+  if (row.type === "pane") return "agent";
+  return "workspace";
 }
 
 function pad(value: string, width: number): string {

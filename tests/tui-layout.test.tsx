@@ -126,10 +126,11 @@ describe("TUI layout", () => {
     const output = renderWorkbenchLayout();
 
     expect(output).toContain("butmux");
-    expect(output).toContain("Project");
-    expect(output).toContain("Type");
+    expect(output).toContain("Kind");
     expect(output).toContain("Name");
     expect(output).toContain("Agents");
+    expect(output).not.toContain("Project");
+    expect(output).not.toContain("Type");
     expect(output).toContain("a");
     expect(output).toContain("b");
     expect(output).toContain("/repo/a");
@@ -138,7 +139,10 @@ describe("TUI layout", () => {
     expect(output).toContain("fix/path");
     expect(output).toContain("missing terminal");
     expect(output).not.toContain("claude running");
-    expect(output).toContain("pane");
+    expect(output).toContain("branch");
+    expect(output).toContain("agent");
+    expect(output).not.toContain("context");
+    expect(output).not.toContain("pane");
     expect(output).toContain("claude %3");
     expect(output).toContain("working");
     expect(output).not.toContain("tmux:");
@@ -150,17 +154,17 @@ describe("TUI layout", () => {
     expect(output).not.toContain("Contexts");
   });
 
-  it("outlines the selected row instead of filling it", () => {
+  it("keeps selected rows dense instead of adding a border", () => {
     const output = renderToString(
-      <WorkbenchTable rows={buildWorkbenchRows([projectB])} selectedIndex={2} />,
+      <WorkbenchTable rows={buildWorkbenchRows([projectB])} selectedIndex={1} />,
       { columns: 120 }
     );
     const lines = output.split("\n");
-    const selectedLine = lines.findIndex((line) => line.includes("claude %3"));
+    const selectedLine = lines.findIndex((line) => line.includes("fix/path"));
 
     expect(selectedLine).toBeGreaterThan(0);
-    expect(lines[selectedLine - 1]).toContain("╭");
-    expect(lines[selectedLine + 1]).toContain("╰");
+    expect(lines[selectedLine - 1]).not.toContain("╭");
+    expect(lines[selectedLine + 1]).not.toContain("╰");
   });
 
   it("renders compact round frames with lazygit-style titles", () => {

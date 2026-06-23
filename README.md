@@ -64,16 +64,16 @@ butmux open
 
 ```text
 j/k or Up/Down     move selection
-Enter              focus selected workspace, context, or pane
+Enter              focus selected workspace, branch, or agent
 r                  refresh
 s                  sync selected row's project
 a                  add project path
 b                  create independent branch in selected row's project
-B                   create dependent branch from selected context
-n                  rename selected managed context
-x                  remove selected project or orphan context after confirmation
+B                   create dependent branch from selected branch
+n                  rename selected managed branch
+x                  remove selected project or orphan branch after confirmation
 c                  create selected row's project workspace session
-[ / ]              reorder selected managed context
+[ / ]              reorder selected managed branch
 ,                  cycle terminal backend
 ?                  show help
 q or Ctrl+C        quit
@@ -89,7 +89,7 @@ butmux runs:
 but branch new <name>
 ```
 
-Use `B` from a managed context row to create a dependent branch anchored to the
+Use `B` from a managed branch row to create a dependent branch anchored to the
 selected branch. butmux uses the selected GitButler branch id when available and
 falls back to the branch name. It runs:
 
