@@ -1,9 +1,19 @@
 import type { AgentPane, Context, ProjectContexts, WorkspaceSession } from "../core/model";
 
-export type ContextRow =
-  | { type: "workspace"; label: string; workspace: WorkspaceSession }
-  | { type: "workspace-missing"; label: string; projectRoot: string }
-  | { type: "context"; label: string; context: Context };
+export type WorkbenchRowStatus = Context["status"] | WorkspaceSession["status"];
+
+type WorkbenchRowBase = {
+  project: ProjectContexts;
+  projectRoot: string;
+  projectName: string;
+  name: string;
+  status: WorkbenchRowStatus;
+  agentPanes: AgentPane[];
+};
+
+export type WorkbenchRow =
+  | (WorkbenchRowBase & { type: "workspace"; workspace?: WorkspaceSession })
+  | (WorkbenchRowBase & { type: "context"; context: Context });
 
 export type BranchPromptState =
   | { type: "create-branch"; value: string; projectRoot: string; mode: "independent" }
