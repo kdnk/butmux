@@ -295,8 +295,7 @@ Update `tests/tui-layout.test.tsx` to render a shell with `WorkbenchTable`:
 const rows = buildWorkbenchRows([projectA, projectB]);
 const output = renderToString(
   <Shell
-    header={<Text>butmux</Text>}
-    activity={<ActivityStrip busy={undefined} error={undefined} lastSync="ready" warnings={[]} />}
+    header={<><Text>butmux</Text><HeaderStatus busy={undefined} error={undefined} lastSync="ready" warnings={[]} /></>}
     keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
   >
     <WorkbenchTable rows={rows} selectedIndex={3} />

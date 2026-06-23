@@ -147,7 +147,7 @@ Remove pane navigation from the main workflow:
 `h/l`, Left/Right, Tab, and Shift+Tab are removed from key hints and help
 because there are no panes to move between.
 
-## Expanded Details And Activity
+## Expanded Details And Status
 
 The workspaces table shows details for every row inline:
 
@@ -157,15 +157,15 @@ The workspaces table shows details for every row inline:
 - project warnings
 - agent pane rows with agent, pane id, status, and last line
 
-The activity strip remains the place for busy state, errors, warnings, and
-last action messages. It should be visually quieter than the selected row and
-expanded row details so it does not compete with the main table.
+The header shows the busy state, errors, warnings, and last action messages
+inline with the top-level command hints. There is no separate activity frame;
+the workspaces table remains the dominant surface.
 
 ## Error Handling
 
-Existing service errors still surface in the activity strip.
+Existing service errors surface in the header status text.
 
-Disabled commands do nothing and may set a short activity message only when the
+Disabled commands do nothing and may set a short status message only when the
 no-op would otherwise be confusing, such as pressing `B` on a workspace row.
 Branch prompt validation remains unchanged.
 
@@ -178,7 +178,7 @@ Add or update focused tests:
 - branch prompts use the selected row's project
 - key hints omit pane navigation and include only actions valid for the row
 - layout rendering includes table headers, project headers, rows from multiple
-  projects, expanded row details, activity strip, and key bar
+  projects, expanded row details, header status, and key bar
 - state helpers no longer expose pane switching as the main navigation model
 
 Avoid brittle full-terminal snapshots. Assert stable labels, commands, and row

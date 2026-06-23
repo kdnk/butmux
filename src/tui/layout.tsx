@@ -10,12 +10,10 @@ import {
 
 export function Shell({
   header,
-  activity,
   keyBar,
   children
 }: {
   header: ReactNode;
-  activity: ReactNode;
   keyBar: ReactNode;
   children: ReactNode;
 }) {
@@ -25,13 +23,12 @@ export function Shell({
         {header}
       </Frame>
       {children}
-      {activity}
       {keyBar}
     </Box>
   );
 }
 
-export function ActivityStrip({
+export function HeaderStatus({
   error,
   busy,
   lastSync,
@@ -44,16 +41,12 @@ export function ActivityStrip({
 }) {
   const message = error ? `error: ${error}` : busy ?? lastSync ?? warnings[0] ?? "ready";
   const color = error ? "red" : busy ? "yellow" : warnings.length > 0 ? "yellow" : "green";
-  return (
-    <Frame title="[2]-Activity" borderColor={color}>
-      <Text color={color}>{message}</Text>
-    </Frame>
-  );
+  return <Text color={color}>{message}</Text>;
 }
 
 export function KeyBar({ rows }: { rows: readonly (readonly [string, string])[] }) {
   return (
-    <Frame title="[3]-Keys" borderColor="gray" flexWrap="wrap" gap={1}>
+    <Frame title="[2]-Keys" borderColor="gray" flexWrap="wrap" gap={1}>
       {rows.map(([keys, label]) => (
         <Text key={`${keys}:${label}`}>
           <Text color="cyan">{keys}</Text> {label}

@@ -4,7 +4,7 @@ import type { AppService, AppState } from "../core/app-service";
 import { watchLiveUpdates } from "../core/live-updates";
 import type { Context } from "../core/model";
 import { helpRows, keyHintsForContext } from "./keymap";
-import { ActivityStrip, KeyBar, Shell, WorkbenchTable } from "./layout";
+import { HeaderStatus, KeyBar, Shell, WorkbenchTable } from "./layout";
 import { startDebouncedLiveRefresh } from "./live-refresh";
 import {
   buildWorkbenchRows,
@@ -281,8 +281,7 @@ export function TuiApp({ service }: { service: AppService }) {
 
   return (
     <Shell
-      header={<Header busy={busy} lastSync={lastSync} />}
-      activity={<ActivityStrip error={error} busy={busy} lastSync={lastSync} warnings={state.warnings} />}
+      header={<Header error={error} busy={busy} lastSync={lastSync} warnings={state.warnings} />}
       keyBar={<KeyBar rows={keyHints} />}
     >
       <WorkbenchTable rows={rows} selectedIndex={rowIndex} />
@@ -292,7 +291,17 @@ export function TuiApp({ service }: { service: AppService }) {
   );
 }
 
-function Header({ busy, lastSync }: { busy: string | undefined; lastSync: string | undefined }) {
+function Header({
+  error,
+  busy,
+  lastSync,
+  warnings
+}: {
+  error: string | undefined;
+  busy: string | undefined;
+  lastSync: string | undefined;
+  warnings: string[];
+}) {
   return (
     <Box gap={2}>
       <Text bold color="cyan">butmux</Text>
@@ -300,8 +309,7 @@ function Header({ busy, lastSync }: { busy: string | undefined; lastSync: string
       <Text dimColor>s sync</Text>
       <Text dimColor>a add</Text>
       <Text dimColor>? help</Text>
-      {lastSync ? <Text color="green">{lastSync}</Text> : null}
-      {busy ? <Text color="yellow">{busy}</Text> : null}
+      <HeaderStatus error={error} busy={busy} lastSync={lastSync} warnings={warnings} />
     </Box>
   );
 }

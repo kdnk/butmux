@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Text, renderToString } from "ink";
+import type { ReactNode } from "react";
 import {
-  ActivityStrip,
+  HeaderStatus,
   KeyBar,
   Shell,
   WorkbenchTable
@@ -92,19 +93,26 @@ const projectB = project({
   ]
 });
 
+function renderWorkbenchLayout({
+  headerStatus = <HeaderStatus error={undefined} busy={undefined} lastSync="ready" warnings={[]} />
+}: {
+  headerStatus?: ReactNode;
+} = {}) {
+  const rows = buildWorkbenchRows([projectA, projectB]);
+  return renderToString(
+    <Shell
+      header={<><Text>butmux</Text>{headerStatus}</>}
+      keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
+    >
+      <WorkbenchTable rows={rows} selectedIndex={3} />
+    </Shell>,
+    { columns: 120 }
+  );
+}
+
 describe("TUI layout", () => {
   it("renders all project rows and details in the workspaces view", () => {
-    const rows = buildWorkbenchRows([projectA, projectB]);
-    const output = renderToString(
-      <Shell
-        header={<Text>butmux</Text>}
-        activity={<ActivityStrip busy={undefined} error={undefined} lastSync="ready" warnings={[]} />}
-        keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
-      >
-        <WorkbenchTable rows={rows} selectedIndex={3} />
-      </Shell>,
-      { columns: 120 }
-    );
+    const output = renderWorkbenchLayout();
 
     expect(output).toContain("butmux");
     expect(output).toContain("Project");
@@ -133,17 +141,7 @@ describe("TUI layout", () => {
   });
 
   it("renders compact round frames with lazygit-style titles", () => {
-    const rows = buildWorkbenchRows([projectA, projectB]);
-    const output = renderToString(
-      <Shell
-        header={<Text>butmux</Text>}
-        activity={<ActivityStrip busy={undefined} error={undefined} lastSync="ready" warnings={[]} />}
-        keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
-      >
-        <WorkbenchTable rows={rows} selectedIndex={3} />
-      </Shell>,
-      { columns: 120 }
-    );
+    const output = renderWorkbenchLayout();
 
     expect(output).toContain("╭");
     expect(output).toContain("╮");
@@ -151,31 +149,32 @@ describe("TUI layout", () => {
     expect(output).toContain("╯");
     expect(output).toContain("[0]-butmux");
     expect(output).toContain("[1]-Workspaces");
-    expect(output).toContain("[2]-Activity");
-    expect(output).toContain("[3]-Keys");
+    expect(output).toContain("[2]-Keys");
+    expect(output).not.toContain("Activity");
     expect(output).not.toMatch(/\n\s*\n/);
   });
 
   it("stretches every frame to the render width", () => {
-    const rows = buildWorkbenchRows([projectA, projectB]);
-    const output = renderToString(
-      <Shell
-        header={<Text>butmux</Text>}
-        activity={<ActivityStrip busy={undefined} error={undefined} lastSync="ready" warnings={[]} />}
-        keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
-      >
-        <WorkbenchTable rows={rows} selectedIndex={3} />
-      </Shell>,
-      { columns: 120 }
-    );
+    const output = renderWorkbenchLayout();
 
     const frameTopLines = output
       .split("\n")
       .filter((line) => line.startsWith("╭["));
 
-    expect(frameTopLines).toHaveLength(4);
+    expect(frameTopLines).toHaveLength(3);
     for (const line of frameTopLines) {
       expect(line.length).toBeGreaterThanOrEqual(100);
     }
+  });
+
+  it("renders status in the header instead of a separate activity frame", () => {
+    const output = renderWorkbenchLayout({
+      headerStatus: <HeaderStatus error="failed" busy={undefined} lastSync="ready" warnings={[]} />
+    });
+
+    expect(output).toContain("error: failed");
+    expect(output).toContain("[0]-butmux");
+    expect(output).not.toContain("[2]-Activity");
+    expect(output).toContain("[2]-Keys");
   });
 });
