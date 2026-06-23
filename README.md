@@ -246,9 +246,16 @@ The Codex marketplace file is:
 .agents/plugins/marketplace.json
 ```
 
-Install the `codex-butmux` plugin from the `butmux` marketplace in Codex, then
-start a new Codex session. Use `/hooks` in Codex to review and trust the plugin
-hooks if Codex asks for hook review.
+From the repository root, add the local marketplace and install the plugin with
+the Codex CLI:
+
+```bash
+codex plugin marketplace add .
+codex plugin add codex-butmux@butmux
+```
+
+Then start a new Codex session. Use `/hooks` in Codex to review and trust the
+plugin hooks if Codex asks for hook review.
 
 The plugin provides:
 
@@ -266,9 +273,16 @@ The Claude Code marketplace file is:
 .claude-plugin/marketplace.json
 ```
 
-Add this repository as a Claude Code plugin marketplace, install
-`claude-butmux`, then run `/reload-plugins` or start a new Claude Code session.
-Use `/hooks` in Claude Code to inspect the installed hook definitions.
+From the repository root, add the local marketplace and install the plugin with
+the Claude Code CLI:
+
+```bash
+claude plugin marketplace add .
+claude plugin install claude-butmux@butmux
+```
+
+Then run `/reload-plugins` or start a new Claude Code session. Use `/hooks` in
+Claude Code to inspect the installed hook definitions.
 
 The plugin provides:
 
