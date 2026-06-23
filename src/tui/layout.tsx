@@ -79,23 +79,39 @@ export function WorkbenchTable({
                 ))}
               </>
             ) : null}
-            <Text
-              color={selected ? "cyan" : statusColor(row)}
-              inverse={selected}
-              wrap="truncate"
-            >
-              {formatTableRow(
-                row.type === "pane" ? "" : row.projectName,
-                row.type,
-                row.name,
-                statusLabel(row.status),
-                agentSummary(row)
-              )}
-            </Text>
+            <TableRow row={row} selected={selected} />
           </Box>
         );
       })}
     </Frame>
+  );
+}
+
+function TableRow({
+  row,
+  selected
+}: {
+  row: WorkbenchRow;
+  selected: boolean;
+}) {
+  const content = (
+    <Text color={statusColor(row)} wrap="truncate">
+      {formatTableRow(
+        row.type === "pane" ? "" : row.projectName,
+        row.type,
+        row.name,
+        statusLabel(row.status),
+        agentSummary(row)
+      )}
+    </Text>
+  );
+
+  if (!selected) return content;
+
+  return (
+    <Box width="100%" borderStyle="round" borderColor="cyan">
+      {content}
+    </Box>
   );
 }
 

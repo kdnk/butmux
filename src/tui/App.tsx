@@ -309,7 +309,6 @@ function Header({
 }) {
   return (
     <Box gap={2}>
-      <Text bold color="cyan">butmux</Text>
       <Text dimColor>r refresh</Text>
       <Text dimColor>s sync</Text>
       <Text dimColor>a add</Text>

@@ -112,7 +112,7 @@ function renderWorkbenchLayout({
   const rows = buildWorkbenchRows([projectA, projectB]);
   return renderToString(
     <Shell
-      header={<><Text>butmux</Text>{headerStatus}</>}
+      header={headerStatus}
       keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
     >
       <WorkbenchTable rows={rows} selectedIndex={4} />
@@ -150,6 +150,19 @@ describe("TUI layout", () => {
     expect(output).not.toContain("Contexts");
   });
 
+  it("outlines the selected row instead of filling it", () => {
+    const output = renderToString(
+      <WorkbenchTable rows={buildWorkbenchRows([projectB])} selectedIndex={2} />,
+      { columns: 120 }
+    );
+    const lines = output.split("\n");
+    const selectedLine = lines.findIndex((line) => line.includes("claude %3"));
+
+    expect(selectedLine).toBeGreaterThan(0);
+    expect(lines[selectedLine - 1]).toContain("╭");
+    expect(lines[selectedLine + 1]).toContain("╰");
+  });
+
   it("renders compact round frames with lazygit-style titles", () => {
     const output = renderWorkbenchLayout();
 
@@ -182,7 +195,7 @@ describe("TUI layout", () => {
     });
 
     const output = renderToString(
-      <WorkbenchTable rows={buildWorkbenchRows([longOutputProject])} selectedIndex={2} />,
+      <WorkbenchTable rows={buildWorkbenchRows([longOutputProject])} selectedIndex={0} />,
       { columns: 120 }
     );
     const lines = output.split("\n");
