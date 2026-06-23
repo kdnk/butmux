@@ -1258,8 +1258,20 @@ function errorDetails(error: unknown): string {
     if ("message" in error && typeof error.message === "string") parts.push(error.message);
     if ("stderr" in error && typeof error.stderr === "string" && error.stderr.trim()) parts.push(error.stderr.trim());
     if ("stdout" in error && typeof error.stdout === "string" && error.stdout.trim()) parts.push(error.stdout.trim());
-    if (parts.length > 0) return parts.join(" ");
+    if (parts.length > 0) return normalizeErrorDetails(parts.join("\n"));
   }
-  if (error instanceof Error) return error.message;
-  return String(error);
+  if (error instanceof Error) return normalizeErrorDetails(error.message);
+  return normalizeErrorDetails(String(error));
+}
+
+function normalizeErrorDetails(details: string): string {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const line of details.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    lines.push(trimmed);
+  }
+  return lines.join(" ");
 }

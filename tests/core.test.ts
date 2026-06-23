@@ -439,6 +439,27 @@ describe("GitButler parsing", () => {
     ]);
   });
 
+  it("deduplicates repeated stderr lines in branch status warnings", async () => {
+    const setupRequired =
+      "Error: Setup required: Not currently on a gitbutler/* branch. - run `but setup` to configure the project";
+    const exec: ExecFunction = async (file, args) => {
+      if (file === "but" && args.join(" ") === "status -fv") {
+        throw {
+          message: "Command failed: but status -fv",
+          stderr: `${setupRequired}\n${setupRequired}`
+        };
+      }
+      throw new Error(`unexpected command: ${file} ${args.join(" ")}`);
+    };
+
+    const result = await readBranchesForProject("/repo/a", exec);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected branch status to fail");
+    expect(result.error).toBe(`but status -fv failed: Command failed: but status -fv ${setupRequired}`);
+    expect(result.error).not.toContain("\n");
+  });
+
   it("groups codex panes by tmux session with last output line", async () => {
     const calls: Array<{ file: string; args: string[]; cwd: string }> = [];
     const exec: ExecFunction = async (file, args, cwd) => {

@@ -102,17 +102,16 @@ function TableRow({
   selected: boolean;
 }) {
   return (
-    <Text
-      color={selected ? "cyan" : statusColor(row)}
-      inverse={selected}
-      wrap="truncate"
-    >
-      {TABLE_ROW_INDENT}{formatTableRow(
-        rowKindLabel(row),
-        row.name,
-        statusLabel(row.status),
-        agentSummary(row)
-      )}
+    <Text wrap="truncate">
+      {selected ? <Text color="cyan">● </Text> : TABLE_ROW_INDENT}
+      <Text color={statusColor(row)}>
+        {formatTableRow(
+          rowKindLabel(row),
+          row.name,
+          statusLabel(row.status),
+          agentSummary(row)
+        )}
+      </Text>
     </Text>
   );
 }
