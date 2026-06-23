@@ -329,7 +329,7 @@ function HelpOverlay() {
   );
 }
 
-function PromptView({ prompt }: { prompt: PromptState }) {
+export function PromptView({ prompt }: { prompt: PromptState }) {
   if (prompt.type === "confirm-remove-project") {
     return <Text color="yellow">Press Enter to remove project {prompt.projectRoot}, Esc to cancel.</Text>;
   }
@@ -341,12 +341,29 @@ function PromptView({ prompt }: { prompt: PromptState }) {
       <Box flexDirection="column">
         <Text color="yellow">{prompt.mode === "dependent" ? "New dependent GitButler branch" : "New GitButler branch"}</Text>
         {prompt.mode === "dependent" ? <Text>Anchor: {prompt.anchorLabel}</Text> : <Text>Type: independent</Text>}
-        <Text>Name: {prompt.value}</Text>
+        <EditablePromptLine label="Name" value={prompt.value} />
       </Box>
     );
   }
   const label = prompt.type === "add-project" ? "Project path" : "New branch";
-  return <Text color="yellow">{label}: {prompt.value}</Text>;
+  return <EditablePromptLine label={label} value={prompt.value} color="yellow" />;
+}
+
+function EditablePromptLine({
+  label,
+  value,
+  color
+}: {
+  label: string;
+  value: string;
+  color?: "yellow";
+}) {
+  return (
+    <Text {...(color ? { color } : {})}>
+      {label}: {value}
+      <Text color="cyan">▌</Text>
+    </Text>
+  );
 }
 
 function formatError(error: unknown): string {
