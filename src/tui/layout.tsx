@@ -7,6 +7,8 @@ import {
   type WorkbenchRow
 } from "./rows";
 
+const TABLE_ROW_INDENT = "  ";
+
 export function Shell({
   header,
   keyBar,
@@ -64,7 +66,7 @@ export function WorkbenchTable({
 }) {
   return (
     <Frame title="[1]-Workspaces" borderColor="cyan">
-      <Text bold color="cyan">{formatTableRow("Kind", "Name", "Status", "Agents")}</Text>
+      <Text bold color="cyan">{TABLE_ROW_INDENT}{formatTableRow("Kind", "Name", "Status", "Agents")}</Text>
       {rows.length === 0 ? <Text dimColor>No projects</Text> : null}
       {rows.map((row, index) => {
         const selected = index === selectedIndex;
@@ -105,7 +107,7 @@ function TableRow({
       inverse={selected}
       wrap="truncate"
     >
-      {formatTableRow(
+      {TABLE_ROW_INDENT}{formatTableRow(
         rowKindLabel(row),
         row.name,
         statusLabel(row.status),

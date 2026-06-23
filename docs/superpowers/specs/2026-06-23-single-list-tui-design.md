@@ -76,11 +76,12 @@ The selected row is visually stronger than the current `>` marker. In Ink this
 should use a reversed or highlighted row marker plus color, while staying
 readable in terminals that do not render background colors consistently.
 
-Project boundaries are shown as project header rows. The table remains
-actionable at the workspace/context row level, and each agent pane is also a
-selectable row so users can focus a pane directly. tmux and terminal names are
-not shown as persistent detail rows; missing tmux or terminal state is surfaced
-through the row status.
+Project boundaries are shown as non-selectable section headings inside the
+Workspaces frame. Selectable workspace/context/agent rows are indented under
+their project heading. The table remains actionable at the workspace/context
+row level, and each agent pane is also a selectable row so users can focus a
+pane directly. tmux and terminal names are not shown as persistent detail rows;
+missing tmux or terminal state is surfaced through the row status.
 
 ## Row Model
 

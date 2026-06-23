@@ -171,6 +171,21 @@ describe("TUI layout", () => {
     expect(lines[projectBLine - 1]).toMatch(/─{10}/);
   });
 
+  it("renders each project as a section with indented selectable rows", () => {
+    const output = renderWorkbenchLayout();
+    const lines = output.split("\n");
+    const projectALine = lines.findIndex((line) => line.includes("a  /repo/a"));
+    const workspaceLine = lines.findIndex((line) => line.includes("workspace") && line.includes("a"));
+    const branchLine = lines.findIndex((line) => line.includes("branch") && line.includes("feature/base"));
+
+    expect(projectALine).toBeGreaterThan(0);
+    expect(workspaceLine).toBeGreaterThan(projectALine);
+    expect(branchLine).toBeGreaterThan(workspaceLine);
+    expect(lines[projectALine]).not.toContain("workspace");
+    expect(lines[workspaceLine]).toMatch(/│ {3}workspace/);
+    expect(lines[branchLine]).toMatch(/│ {3}branch/);
+  });
+
   it("prefixes statuses with emoji symbols", () => {
     const emojiProject = project({
       root: "/repo/emoji",
