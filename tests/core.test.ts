@@ -30,6 +30,7 @@ import {
   removeOrphanContext,
   renameManagedContext,
   readBranchesForProject,
+  runGitButlerModeCommand,
   resolveAgentPaneCommand,
   type ExecFunction
 } from "../src/core/commands";
@@ -931,6 +932,24 @@ describe("GitButler parsing", () => {
         paneId: "%21",
         cwd: "/repo/a"
       }
+    ]);
+  });
+});
+
+describe("GitButler mode commands", () => {
+  it("runs setup and teardown in the selected project root", async () => {
+    const calls: Array<{ file: string; args: string[]; cwd: string }> = [];
+    const exec: ExecFunction = async (file, args, cwd) => {
+      calls.push({ file, args, cwd });
+      return { stdout: "", stderr: "" };
+    };
+
+    await runGitButlerModeCommand("/repo/a", "setup", "/repo/a", exec);
+    await runGitButlerModeCommand("/repo/a", "teardown", "/repo/a", exec);
+
+    expect(calls).toEqual([
+      { file: "but", args: ["setup"], cwd: "/repo/a" },
+      { file: "but", args: ["teardown"], cwd: "/repo/a" }
     ]);
   });
 });

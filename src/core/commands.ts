@@ -35,6 +35,8 @@ export type RemoveOrphanInput = {
   terminalTabTitle: string;
 };
 
+export type GitButlerModeCommand = "setup" | "teardown";
+
 export type RenameManagedInput = {
   projectRoot: string;
   branchId?: string;
@@ -216,6 +218,15 @@ export async function createGitButlerBranch(
     args.push("-a", input.anchor);
   }
   await run("but", args, cwd);
+}
+
+export async function runGitButlerModeCommand(
+  projectRoot: string,
+  command: GitButlerModeCommand,
+  cwd = projectRoot,
+  run: ExecFunction = exec
+): Promise<void> {
+  await run("but", [command], cwd);
 }
 
 async function focusSessionByName(

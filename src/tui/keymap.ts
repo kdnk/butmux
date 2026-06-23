@@ -1,4 +1,5 @@
 export type KeyHint = readonly [string, string];
+export type GitButlerModeIntent = "setup" | "teardown";
 
 export type KeyHintContext = {
   hasRow: boolean;
@@ -6,6 +7,7 @@ export type KeyHintContext = {
   hasManagedContext: boolean;
   hasRemovableOrphan: boolean;
   canReorderContext: boolean;
+  gitButlerModeIntent?: GitButlerModeIntent;
 };
 
 export const helpRows = [
@@ -17,6 +19,7 @@ export const helpRows = [
   ["b", "create independent branch in selected row's project"],
   ["B", "create dependent branch from selected branch"],
   ["n", "rename selected managed branch"],
+  ["g", "run suggested GitButler setup or teardown"],
   ["x", "remove selected project or orphan branch"],
   ["c", "create selected row's project workspace session"],
   ["[ / ]", "move selected managed branch"],
@@ -52,6 +55,10 @@ export function keyHintsForContext(context: KeyHintContext): readonly KeyHint[] 
     rowHints.push(["[/]", "move"]);
   }
 
+  if (context.gitButlerModeIntent) {
+    rowHints.push(["g", context.gitButlerModeIntent]);
+  }
+
   if (context.hasWorkspaceRow) {
     rowHints.push(["x", "remove project"]);
   } else if (context.hasRemovableOrphan) {
@@ -59,4 +66,17 @@ export function keyHintsForContext(context: KeyHintContext): readonly KeyHint[] 
   }
 
   return [...rowHints, ...common];
+}
+
+export function gitButlerModeIntentForWarnings(
+  warnings: readonly string[]
+): GitButlerModeIntent | undefined {
+  const text = warnings.join("\n").toLowerCase();
+  if (text.includes("gitbutler mode exit required") || text.includes("but teardown")) {
+    return "teardown";
+  }
+  if (text.includes("setup required") || text.includes("but setup")) {
+    return "setup";
+  }
+  return undefined;
 }

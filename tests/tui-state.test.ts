@@ -3,7 +3,7 @@ import {
   clampSelection,
   moveSelection
 } from "../src/tui/state";
-import { helpRows, keyHintsForContext } from "../src/tui/keymap";
+import { gitButlerModeIntentForWarnings, helpRows, keyHintsForContext } from "../src/tui/keymap";
 
 describe("TUI state helpers", () => {
   it("keeps single-list selection within bounds", () => {
@@ -65,6 +65,46 @@ describe("TUI state helpers", () => {
       hasRemovableOrphan: false,
       canReorderContext: false
     })).not.toContainEqual(["enter", "focus"]);
+  });
+
+  it("detects GitButler mode actions from project warnings", () => {
+    expect(gitButlerModeIntentForWarnings([
+      "but status -fv failed: Command failed: but status -fv Error: Setup required: Not currently on a gitbutler/* branch. - run `but setup` to configure the project"
+    ])).toBe("setup");
+
+    expect(gitButlerModeIntentForWarnings([
+      "but status -fv failed: Command failed: but status -fv Error: GitButler mode exit required: please run `but teardown` to preserve your work."
+    ])).toBe("teardown");
+
+    expect(gitButlerModeIntentForWarnings(["terminal tab missing"])).toBeUndefined();
+  });
+
+  it("shows GitButler setup or teardown hints only when warnings call for them", () => {
+    expect(keyHintsForContext({
+      hasRow: true,
+      hasWorkspaceRow: true,
+      hasManagedContext: false,
+      hasRemovableOrphan: false,
+      canReorderContext: false,
+      gitButlerModeIntent: "setup"
+    })).toContainEqual(["g", "setup"]);
+
+    expect(keyHintsForContext({
+      hasRow: true,
+      hasWorkspaceRow: true,
+      hasManagedContext: false,
+      hasRemovableOrphan: false,
+      canReorderContext: false,
+      gitButlerModeIntent: "teardown"
+    })).toContainEqual(["g", "teardown"]);
+
+    expect(keyHintsForContext({
+      hasRow: true,
+      hasWorkspaceRow: true,
+      hasManagedContext: false,
+      hasRemovableOrphan: false,
+      canReorderContext: false
+    })).not.toContainEqual(["g", "setup"]);
   });
 
   it("removes pane navigation from help rows", () => {

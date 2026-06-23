@@ -9,8 +9,10 @@ import {
   readSystemSnapshotForCwd as readSystemSnapshotForCwdDefault,
   removeOrphanContext as removeOrphanContextDefault,
   renameManagedContext as renameManagedContextDefault,
+  runGitButlerModeCommand as runGitButlerModeCommandDefault,
   type CreateGitButlerBranchInput,
   type FullSystemSnapshot,
+  type GitButlerModeCommand,
   type RemoveOrphanInput,
   type SystemSnapshot
 } from "./commands";
@@ -60,6 +62,8 @@ export type AppService = {
   addProjectRoot(root: string): Promise<AppState>;
   removeProjectRoot(root: string): Promise<AppState>;
   createBranch(input: CreateBranchInput): Promise<AppState & { commands: SyncCommand[]; branchName: string }>;
+  setupGitButlerProject(root: string): Promise<AppState>;
+  teardownGitButlerWorkspace(root: string): Promise<AppState>;
   createWorkspaceSession(projectRoot: string): Promise<AppState>;
   focusContext(input: { projectRoot: string; branchKey: string; paneId?: string }): Promise<void>;
   focusWorkspaceSession(input: { projectRoot: string; paneId?: string }): Promise<void>;
@@ -89,6 +93,7 @@ export type AppServiceDeps = {
   focusWorkspaceSession: typeof focusWorkspaceSessionDefault;
   createWorkspaceSession: typeof createWorkspaceSessionDefault;
   createGitButlerBranch: (input: CreateGitButlerBranchInput) => Promise<void>;
+  runGitButlerModeCommand: (projectRoot: string, command: GitButlerModeCommand) => Promise<void>;
   renameManagedContext: typeof renameManagedContextDefault;
   removeOrphanContext: typeof removeOrphanContextDefault;
 };
@@ -110,6 +115,7 @@ export function createAppService(options: CreateAppServiceOptions): AppService {
     focusWorkspaceSession: options.focusWorkspaceSession ?? focusWorkspaceSessionDefault,
     createWorkspaceSession: options.createWorkspaceSession ?? createWorkspaceSessionDefault,
     createGitButlerBranch: options.createGitButlerBranch ?? createGitButlerBranchDefault,
+    runGitButlerModeCommand: options.runGitButlerModeCommand ?? runGitButlerModeCommandDefault,
     renameManagedContext: options.renameManagedContext ?? renameManagedContextDefault,
     removeOrphanContext: options.removeOrphanContext ?? removeOrphanContextDefault
   };
@@ -288,6 +294,16 @@ export function createAppService(options: CreateAppServiceOptions): AppService {
         { [input.projectRoot]: result.projectWarnings }
       );
       return { ...state, commands: result.commands, branchName };
+    },
+
+    async setupGitButlerProject(root: string) {
+      await deps.runGitButlerModeCommand(root, "setup");
+      return await getReconciledFullState();
+    },
+
+    async teardownGitButlerWorkspace(root: string) {
+      await deps.runGitButlerModeCommand(root, "teardown");
+      return await getReconciledFullState();
     },
 
     async createWorkspaceSession(projectRoot: string) {
