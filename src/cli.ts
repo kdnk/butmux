@@ -28,7 +28,7 @@ const usage = [
   "Usage: butmux",
   "Usage: butmux hook <agent> <event>",
   "Usage: butmux notify <message>",
-  "Usage: butmux open"
+  "Usage: butmux add"
 ].join("\n");
 
 export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
@@ -52,18 +52,18 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     return 0;
   }
 
-  if (command === "open") {
+  if (command === "add") {
     if (deps.cwd === "/") {
       deps.stderr.write("Refusing to add filesystem root as a project: /\n");
       return 1;
     }
     const appDataDir = resolveButmuxPaths(deps.env, deps.platform, deps.home).stateDir;
     const registry = await deps.loadRegistry(appDataDir);
-    const status = await openProjectInButmux(deps.cwd, appDataDir, registry, deps);
+    const status = await addProjectToButmux(deps.cwd, appDataDir, registry, deps);
     if (status === "exists") {
       deps.stdout.write(`Project already exists in butmux: ${deps.cwd}\n`);
     } else {
-      deps.stdout.write(`Opened ${deps.cwd} in butmux.\n`);
+      deps.stdout.write(`Added ${deps.cwd} to butmux.\n`);
     }
     return 0;
   }
@@ -72,7 +72,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
   return 1;
 }
 
-export async function openProjectInButmux(
+export async function addProjectToButmux(
   cwd: string,
   appDataDir: string,
   registry: Registry,
@@ -92,7 +92,7 @@ export async function openProjectInButmux(
   await deps.saveRegistry(appDataDir, nextRegistry);
   await deps.emitLiveUpdate({
     agent: "butmux",
-    event: "open",
+    event: "add",
     paneId: "cli",
     cwd
   });

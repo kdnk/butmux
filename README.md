@@ -57,7 +57,7 @@ butmux
 Add the current directory from a shell:
 
 ```bash
-butmux open
+butmux add
 ```
 
 ## Keyboard
