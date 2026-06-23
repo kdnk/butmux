@@ -58,6 +58,7 @@ async function createTempService(overrides: Partial<Parameters<typeof createAppS
   const readFullSystemSnapshot = vi.fn(async (roots: string[]) => emptyFullSnapshot(roots));
   const readSystemSnapshotForCwd = vi.fn(async () => emptySystemSnapshot());
   const applySyncCommand = vi.fn(async () => undefined);
+  const runGitButlerModeCommand = vi.fn(async () => undefined);
   const service = createAppService({
     configDir,
     stateDir,
@@ -65,6 +66,7 @@ async function createTempService(overrides: Partial<Parameters<typeof createAppS
     readFullSystemSnapshot,
     readSystemSnapshotForCwd,
     applySyncCommand,
+    runGitButlerModeCommand,
     focusContext: vi.fn(async () => undefined),
     focusWorkspaceSession: vi.fn(async () => undefined),
     createWorkspaceSession: vi.fn(async () => undefined),
@@ -72,7 +74,15 @@ async function createTempService(overrides: Partial<Parameters<typeof createAppS
     removeOrphanContext: vi.fn(async () => undefined),
     ...overrides
   });
-  return { service, configDir, stateDir, readFullSystemSnapshot, readSystemSnapshotForCwd, applySyncCommand };
+  return {
+    service,
+    configDir,
+    stateDir,
+    readFullSystemSnapshot,
+    readSystemSnapshotForCwd,
+    applySyncCommand,
+    runGitButlerModeCommand
+  };
 }
 
 describe("orderedProjectRoots", () => {
@@ -118,6 +128,26 @@ describe("createAppService", () => {
 
     expect(state.projectsWithContexts).toEqual([]);
     await expect(loadRegistry(stateDir)).resolves.toEqual({ projects: [], contexts: [] });
+  });
+
+  it("runs GitButler setup for a project and refreshes app state", async () => {
+    const runGitButlerModeCommand = vi.fn(async () => undefined);
+    const { service } = await createTempService({ runGitButlerModeCommand });
+    await service.addProjectRoot("/repo/a");
+
+    await service.setupGitButlerProject("/repo/a");
+
+    expect(runGitButlerModeCommand).toHaveBeenCalledWith("/repo/a", "setup");
+  });
+
+  it("runs GitButler teardown for a project and refreshes app state", async () => {
+    const runGitButlerModeCommand = vi.fn(async () => undefined);
+    const { service } = await createTempService({ runGitButlerModeCommand });
+    await service.addProjectRoot("/repo/a");
+
+    await service.teardownGitButlerWorkspace("/repo/a");
+
+    expect(runGitButlerModeCommand).toHaveBeenCalledWith("/repo/a", "teardown");
   });
 
   it("persists project reorder", async () => {

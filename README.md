@@ -71,6 +71,7 @@ a                  add project path
 b                  create independent branch in selected row's project
 B                   create dependent branch from selected branch
 n                  rename selected managed branch
+g                  run suggested GitButler setup or teardown
 x                  remove selected project or orphan branch after confirmation
 c                  create selected row's project workspace session
 [ / ]              reorder selected managed branch
@@ -378,6 +379,7 @@ npm test
 ## Operational Notes
 
 - If `but status -fv` reports `Setup required: No GitButler project found`, butmux runs `but setup` and retries.
+- If a project warning says `but setup` or `but teardown` is needed, select that project's row and press `g` to run the suggested GitButler command.
 - If a terminal tab is missing during focus, butmux creates one.
 - If a tmux session is missing during focus, butmux creates one.
 - If a target pane lives in another tmux window, butmux switches to that window before selecting the pane.

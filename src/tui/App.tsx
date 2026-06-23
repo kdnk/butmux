@@ -3,7 +3,7 @@ import { Box, Text, useApp, useInput } from "ink";
 import type { AppService, AppState } from "../core/app-service";
 import { watchLiveUpdates } from "../core/live-updates";
 import type { Context } from "../core/model";
-import { helpRows, keyHintsForContext } from "./keymap";
+import { gitButlerModeIntentForWarnings, helpRows, keyHintsForContext } from "./keymap";
 import { HeaderStatus, KeyBar, Shell, WorkbenchTable } from "./layout";
 import { startDebouncedLiveRefresh } from "./live-refresh";
 import {
@@ -39,12 +39,14 @@ export function TuiApp({ service }: { service: AppService }) {
 
   const rows = useMemo(() => buildWorkbenchRows(state.projectsWithContexts), [state.projectsWithContexts]);
   const selectedRow = rows[rowIndex];
+  const gitButlerModeIntent = gitButlerModeIntentForWarnings(selectedRow?.project.warnings ?? []);
   const keyHints = keyHintsForContext({
     hasRow: Boolean(selectedRow),
     hasWorkspaceRow: selectedRow?.type === "workspace",
     hasManagedContext: selectedRow?.type === "context",
     hasRemovableOrphan: selectedRow?.type === "context" && selectedRow.context.status === "orphan_tmux",
-    canReorderContext: selectedRow?.type === "context" && selectedRow.project.contexts.length > 1
+    canReorderContext: selectedRow?.type === "context" && selectedRow.project.contexts.length > 1,
+    ...(gitButlerModeIntent ? { gitButlerModeIntent } : {})
   });
 
   async function runAction(label: string, action: () => Promise<AppState | void>) {
@@ -106,6 +108,10 @@ export function TuiApp({ service }: { service: AppService }) {
     }
     if (input === "s") {
       void syncSelectedProject();
+      return;
+    }
+    if (input === "g") {
+      void runGitButlerModeAction();
       return;
     }
     if (input === "a") {
@@ -231,6 +237,19 @@ export function TuiApp({ service }: { service: AppService }) {
       setLastSync(`${next.commands.length} commands`);
       return next;
     });
+  }
+
+  async function runGitButlerModeAction() {
+    if (!selectedRow || !gitButlerModeIntent) return;
+    if (gitButlerModeIntent === "setup") {
+      await runAction("running but setup", async () =>
+        await service.setupGitButlerProject(selectedRow.projectRoot)
+      );
+      return;
+    }
+    await runAction("running but teardown", async () =>
+      await service.teardownGitButlerWorkspace(selectedRow.projectRoot)
+    );
   }
 
   async function cycleTerminalBackend() {

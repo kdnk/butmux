@@ -10,6 +10,7 @@ describe("README TUI docs", () => {
     expect(readme).toContain("s                  sync selected row's project");
     expect(readme).toContain("b                  create independent branch in selected row's project");
     expect(readme).toContain("B                   create dependent branch from selected branch");
+    expect(readme).toContain("g                  run suggested GitButler setup or teardown");
     expect(readme).not.toContain("h/l or Left/Right  switch pane");
     expect(readme).not.toContain("Tab / Shift+Tab     cycle panes");
     expect(readme).toContain("but branch new <name>");
