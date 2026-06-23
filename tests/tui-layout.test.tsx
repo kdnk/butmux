@@ -123,4 +123,30 @@ describe("TUI layout", () => {
     expect(output).not.toContain("Projects");
     expect(output).not.toContain("Contexts");
   });
+
+  it("renders compact round frames with lazygit-style titles", () => {
+    const rows = buildWorkbenchRows([projectA, projectB]);
+    const output = renderToString(
+      <Shell
+        header={<Text>butmux</Text>}
+        activity={<ActivityStrip busy={undefined} error={undefined} lastSync="ready" warnings={[]} />}
+        keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
+      >
+        <WorkbenchTable rows={rows} selectedIndex={3} />
+        <SelectedDetail state={{ projectsWithContexts: [projectA, projectB], warnings: [] }} row={rows[3]} />
+      </Shell>,
+      { columns: 120 }
+    );
+
+    expect(output).toContain("╭");
+    expect(output).toContain("╮");
+    expect(output).toContain("╰");
+    expect(output).toContain("╯");
+    expect(output).toContain("[0]-butmux");
+    expect(output).toContain("[1]-Workspaces");
+    expect(output).toContain("[2]-Selected");
+    expect(output).toContain("[3]-Activity");
+    expect(output).toContain("[4]-Keys");
+    expect(output).not.toMatch(/\n\s*\n/);
+  });
 });

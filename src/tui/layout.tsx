@@ -22,10 +22,10 @@ export function Shell({
   children: ReactNode;
 }) {
   return (
-    <Box flexDirection="column" gap={1}>
-      <Box borderStyle="single" borderColor="cyan" paddingX={1}>
+    <Box flexDirection="column">
+      <Frame title="[0]-butmux" borderColor="cyan">
         {header}
-      </Box>
+      </Frame>
       {children}
       {activity}
       {keyBar}
@@ -47,21 +47,21 @@ export function ActivityStrip({
   const message = error ? `error: ${error}` : busy ?? lastSync ?? warnings[0] ?? "ready";
   const color = error ? "red" : busy ? "yellow" : warnings.length > 0 ? "yellow" : "green";
   return (
-    <Box borderStyle="single" borderColor={color} paddingX={1}>
+    <Frame title="[3]-Activity" borderColor={color}>
       <Text color={color}>{message}</Text>
-    </Box>
+    </Frame>
   );
 }
 
 export function KeyBar({ rows }: { rows: readonly (readonly [string, string])[] }) {
   return (
-    <Box borderStyle="single" borderColor="gray" paddingX={1} flexWrap="wrap" gap={1}>
+    <Frame title="[4]-Keys" borderColor="gray" flexWrap="wrap" gap={1}>
       {rows.map(([keys, label]) => (
         <Text key={`${keys}:${label}`}>
           <Text color="cyan">{keys}</Text> {label}
         </Text>
       ))}
-    </Box>
+    </Frame>
   );
 }
 
@@ -73,7 +73,7 @@ export function WorkbenchTable({
   selectedIndex: number;
 }) {
   return (
-    <Box flexDirection="column" borderStyle="single" borderColor="cyan" paddingX={1}>
+    <Frame title="[1]-Workspaces" borderColor="cyan">
       <Text bold color="cyan">{formatTableRow("Project", "Type", "Name", "Status", "Agents")}</Text>
       {rows.length === 0 ? <Text dimColor>No projects</Text> : null}
       {rows.map((row, index) => {
@@ -94,7 +94,7 @@ export function WorkbenchTable({
           </Text>
         );
       })}
-    </Box>
+    </Frame>
   );
 }
 
@@ -107,8 +107,7 @@ export function SelectedDetail({
 }) {
   const warnings = row ? [...state.warnings, ...(row.project.warnings ?? [])] : state.warnings;
   return (
-    <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1} minHeight={5}>
-      <Text bold color="cyan">Selected</Text>
+    <Frame title="[2]-Selected" borderColor="gray" minHeight={5}>
       {row ? (
         <>
           <Text>{detailTitle(row)}</Text>
@@ -137,6 +136,37 @@ export function SelectedDetail({
       ) : (
         <Text dimColor>No selection</Text>
       )}
+    </Frame>
+  );
+}
+
+function Frame({
+  title,
+  borderColor,
+  minHeight,
+  flexWrap,
+  gap,
+  children
+}: {
+  title: string;
+  borderColor: "cyan" | "gray" | "green" | "yellow" | "red";
+  minHeight?: number;
+  flexWrap?: "wrap";
+  gap?: number;
+  children: ReactNode;
+}) {
+  return (
+    <Box
+      flexDirection="column"
+      borderStyle="round"
+      borderColor={borderColor}
+      paddingX={1}
+      minHeight={minHeight}
+      flexWrap={flexWrap}
+      gap={gap}
+    >
+      <Text bold color={borderColor}>{title}</Text>
+      {children}
     </Box>
   );
 }
