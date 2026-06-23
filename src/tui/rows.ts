@@ -143,12 +143,8 @@ export function readAgentPanes(row: WorkbenchRow | undefined): AgentPane[] {
 
 export function agentSummary(row: WorkbenchRow): string {
   if (row.type === "pane") return row.pane.lastLine || "-";
-  if (row.agentPanes.length === 0) return "-";
-  if (row.agentPanes.length === 1) {
-    const pane = row.agentPanes[0]!;
-    return `${pane.agent} ${pane.status}`;
-  }
-  return `${row.agentPanes.length} agents`;
+  if (row.agentPanes.length > 0) return "";
+  return "-";
 }
 
 export function focusTargetForRow(row: WorkbenchRow | undefined): WorkbenchFocusTarget | undefined {

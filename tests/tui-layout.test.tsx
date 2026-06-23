@@ -126,7 +126,7 @@ describe("TUI layout", () => {
     expect(output).toContain("a warning");
     expect(output).toContain("fix/path");
     expect(output).toContain("missing terminal");
-    expect(output).toContain("claude running");
+    expect(output).not.toContain("claude running");
     expect(output).toContain("pane");
     expect(output).toContain("claude %3");
     expect(output).toContain("working");
@@ -148,7 +148,7 @@ describe("TUI layout", () => {
     expect(output).toContain("╯");
     expect(output).toContain("[0]-butmux");
     expect(output).toContain("[1]-Workspaces");
-    expect(output).toContain("[2]-Keys");
+    expect(output).not.toContain("[2]-Keys");
     expect(output).not.toContain("Activity");
     expect(output).not.toMatch(/\n\s*\n/);
   });
@@ -160,7 +160,7 @@ describe("TUI layout", () => {
       .split("\n")
       .filter((line) => line.startsWith("╭["));
 
-    expect(frameTopLines).toHaveLength(3);
+    expect(frameTopLines).toHaveLength(2);
     for (const line of frameTopLines) {
       expect(line.length).toBeGreaterThanOrEqual(100);
     }
@@ -174,6 +174,27 @@ describe("TUI layout", () => {
     expect(output).toContain("error: failed");
     expect(output).toContain("[0]-butmux");
     expect(output).not.toContain("[2]-Activity");
-    expect(output).toContain("[2]-Keys");
+    expect(output).not.toContain("[2]-Keys");
+  });
+
+  it("renders key hints as an unframed wrapping footer", () => {
+    const output = renderToString(
+      <KeyBar rows={[
+        ["enter", "focus"],
+        ["s", "sync"],
+        ["b", "branch"],
+        ["B", "dependent"],
+        ["n", "rename"],
+        ["?", "help"],
+        ["q", "quit"]
+      ]} />,
+      { columns: 28 }
+    );
+
+    expect(output).toContain("enter focus");
+    expect(output).toContain("q quit");
+    expect(output).not.toContain("╭");
+    expect(output).not.toContain("[2]-Keys");
+    expect(output.split("\n").length).toBeGreaterThan(1);
   });
 });

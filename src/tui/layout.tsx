@@ -45,13 +45,13 @@ export function HeaderStatus({
 
 export function KeyBar({ rows }: { rows: readonly (readonly [string, string])[] }) {
   return (
-    <Frame title="[2]-Keys" borderColor="gray" flexWrap="wrap" gap={1}>
+    <Box width="100%" flexWrap="wrap" gap={1} paddingX={1}>
       {rows.map(([keys, label]) => (
         <Text key={`${keys}:${label}`}>
           <Text color="cyan">{keys}</Text> {label}
         </Text>
       ))}
-    </Frame>
+    </Box>
   );
 }
 

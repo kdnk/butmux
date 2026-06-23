@@ -53,11 +53,11 @@ butmux  backend kitty  ready
 Project      Type       Name                 Status           Agents
 butmux       /repo/butmux
 butmux       workspace  butmux               ready            -
-butmux       context    feature/ui           waiting          codex
+butmux       context    feature/ui           waiting
              pane       codex %1             running          running tests
 dot          /repo/dot
 dot          workspace  dot                  missing tmux     -
-dot          context    fix/path             running          claude
+dot          context    fix/path             running
              pane       claude %2            running          editing files
 
 b branch  B dependent  enter focus  s sync  c workspace  n rename  x remove  ? help  q quit
@@ -69,8 +69,8 @@ The table uses fixed columns:
 - `Type`: `workspace`, `context`, or `pane`
 - `Name`: workspace session name, branch name, or agent plus pane id
 - `Status`: compact status text
-- `Agents`: compact agent summary, such as `codex waiting`, `claude running`,
-  `2 agents`, or the selected pane's latest line
+- `Agents`: `-` when a workspace/context has no panes, blank when its panes are
+  listed underneath, or the pane's latest line on pane rows
 
 The selected row is visually stronger than the current `>` marker. In Ink this
 should use a reversed or highlighted row marker plus color, while staying
@@ -172,6 +172,10 @@ The header shows the busy state, errors, warnings, and last action messages
 inline with the top-level command hints. There is no separate activity frame;
 the workspaces table remains the dominant surface.
 
+The key hints render as an unframed footer below the workspaces table. Hints are
+laid out horizontally and wrap onto additional lines when the terminal is too
+narrow.
+
 ## Error Handling
 
 Existing service errors surface in the header status text.
@@ -189,7 +193,7 @@ Add or update focused tests:
 - branch prompts use the selected row's project
 - key hints omit pane navigation and include only actions valid for the row
 - layout rendering includes table headers, project headers, rows from multiple
-  projects, selectable pane rows, header status, and key bar
+  projects, selectable pane rows, header status, and the unframed key footer
 - state helpers no longer expose pane switching as the main navigation model
 
 Avoid brittle full-terminal snapshots. Assert stable labels, commands, and row

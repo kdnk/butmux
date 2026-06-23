@@ -17,6 +17,14 @@ const runningClaude: AgentPane = {
   status: "running"
 };
 
+const waitingCodex: AgentPane = {
+  agent: "codex",
+  paneId: "%4",
+  command: "codex",
+  lastLine: "needs review",
+  status: "waiting"
+};
+
 function context(input: Partial<Context> & { branch: string; projectRoot: string }): Context {
   return {
     id: `ctx-${input.branch}`,
@@ -108,6 +116,17 @@ const projectAWithTwoContexts = project({
   ]
 });
 
+const projectWithWorkspaceAgents = project({
+  root: "/repo/c",
+  name: "c",
+  workspaceSession: workspace({
+    projectRoot: "/repo/c",
+    name: "c-workspace",
+    agentPanes: [runningClaude, waitingCodex]
+  }),
+  contexts: []
+});
+
 describe("tui rows", () => {
   it("builds a flat workbench row list across projects", () => {
     const rows = buildWorkbenchRows([projectA, projectB]);
@@ -125,8 +144,21 @@ describe("tui rows", () => {
     const rows = buildWorkbenchRows([projectA, projectB]);
 
     expect(agentSummary(rows[0]!)).toBe("-");
-    expect(agentSummary(rows[3]!)).toBe("claude running");
+    expect(agentSummary(rows[3]!)).toBe("");
     expect(agentSummary(rows[4]!)).toBe("working");
+  });
+
+  it("omits workspace agent counts when pane rows are visible", () => {
+    const rows = buildWorkbenchRows([projectWithWorkspaceAgents]);
+
+    expect(rows.map((row) => [row.type, row.name, row.status])).toEqual([
+      ["workspace", "c-workspace", "ready"],
+      ["pane", "claude %3", "running"],
+      ["pane", "codex %4", "waiting"]
+    ]);
+    expect(agentSummary(rows[0]!)).toBe("");
+    expect(agentSummary(rows[1]!)).toBe("working");
+    expect(agentSummary(rows[2]!)).toBe("needs review");
   });
 
   it("returns dependent branch anchors only for managed context rows", () => {

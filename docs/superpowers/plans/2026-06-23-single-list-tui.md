@@ -65,7 +65,8 @@ it("builds a flat workbench row list across projects", () => {
     ["a", "workspace", "a", "missing_tmux"],
     ["a", "context", "feature/base", "ready"],
     ["b", "workspace", "b-workspace", "ready"],
-    ["b", "context", "fix/path", "missing_terminal"]
+    ["b", "context", "fix/path", "missing_terminal"],
+    ["b", "pane", "claude %3", "running"]
   ]);
 });
 
@@ -73,7 +74,8 @@ it("summarizes agent activity for rows", () => {
   const rows = buildWorkbenchRows([projectA, projectB]);
 
   expect(agentSummary(rows[0]!)).toBe("-");
-  expect(agentSummary(rows[3]!)).toBe("claude running");
+  expect(agentSummary(rows[3]!)).toBe("");
+  expect(agentSummary(rows[4]!)).toBe("working");
 });
 
 it("creates branch prompts from the selected row project", () => {
