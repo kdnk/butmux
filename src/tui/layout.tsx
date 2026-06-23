@@ -156,17 +156,21 @@ function Frame({
   children: ReactNode;
 }) {
   return (
-    <Box
-      flexDirection="column"
-      borderStyle="round"
-      borderColor={borderColor}
-      paddingX={1}
-      minHeight={minHeight}
-      flexWrap={flexWrap}
-      gap={gap}
-    >
-      <Text bold color={borderColor}>{title}</Text>
-      {children}
+    <Box position="relative">
+      <Box
+        flexDirection="column"
+        borderStyle="round"
+        borderColor={borderColor}
+        paddingX={1}
+        minHeight={minHeight}
+        flexWrap={flexWrap}
+        gap={gap}
+      >
+        {children}
+      </Box>
+      <Box position="absolute" top={0} left={1}>
+        <Text bold color={borderColor}>{title}</Text>
+      </Box>
     </Box>
   );
 }
