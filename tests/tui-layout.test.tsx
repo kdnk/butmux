@@ -155,4 +155,27 @@ describe("TUI layout", () => {
     expect(output).toContain("[3]-Keys");
     expect(output).not.toMatch(/\n\s*\n/);
   });
+
+  it("stretches every frame to the render width", () => {
+    const rows = buildWorkbenchRows([projectA, projectB]);
+    const output = renderToString(
+      <Shell
+        header={<Text>butmux</Text>}
+        activity={<ActivityStrip busy={undefined} error={undefined} lastSync="ready" warnings={[]} />}
+        keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
+      >
+        <WorkbenchTable rows={rows} selectedIndex={3} />
+      </Shell>,
+      { columns: 120 }
+    );
+
+    const frameTopLines = output
+      .split("\n")
+      .filter((line) => line.startsWith("╭["));
+
+    expect(frameTopLines).toHaveLength(4);
+    for (const line of frameTopLines) {
+      expect(line.length).toBeGreaterThanOrEqual(100);
+    }
+  });
 });

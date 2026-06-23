@@ -127,9 +127,10 @@ function Frame({
   children: ReactNode;
 }) {
   return (
-    <Box position="relative">
+    <Box position="relative" width="100%">
       <Box
         flexDirection="column"
+        width="100%"
         borderStyle="round"
         borderColor={borderColor}
         paddingX={1}
