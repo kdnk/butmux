@@ -53,22 +53,12 @@ butmux  backend kitty  ready
 Project      Type       Name                 Status           Agents
 butmux       /repo/butmux
 butmux       workspace  butmux               ready            -
-  tmux: butmux
-  terminal: butmux
-  agents: -
-butmux       branch     feature/ui           waiting          codex
-  tmux: bm_butmux_feature%2Fui
-  terminal: bm_butmux_feature%2Fui
-  agent: codex %1 running running tests
+butmux       context    feature/ui           waiting          codex
+             pane       codex %1             running          running tests
 dot          /repo/dot
 dot          workspace  dot                  missing tmux     -
-  tmux: missing tmux
-  terminal: missing terminal
-  agents: -
-dot          branch     fix/path             running          claude
-  tmux: bm_dot_fix%2Fpath
-  terminal: bm_dot_fix%2Fpath
-  agent: claude %2 running editing files
+dot          context    fix/path             running          claude
+             pane       claude %2            running          editing files
 
 b branch  B dependent  enter focus  s sync  c workspace  n rename  x remove  ? help  q quit
 ```
@@ -76,20 +66,21 @@ b branch  B dependent  enter focus  s sync  c workspace  n rename  x remove  ? h
 The table uses fixed columns:
 
 - `Project`: registry project name
-- `Type`: `workspace` or `branch`
-- `Name`: workspace session name or branch name
+- `Type`: `workspace`, `context`, or `pane`
+- `Name`: workspace session name, branch name, or agent plus pane id
 - `Status`: compact status text
 - `Agents`: compact agent summary, such as `codex waiting`, `claude running`,
-  or `2 agents`
+  `2 agents`, or the selected pane's latest line
 
 The selected row is visually stronger than the current `>` marker. In Ink this
 should use a reversed or highlighted row marker plus color, while staying
 readable in terminals that do not render background colors consistently.
 
 Project boundaries are shown as project header rows. The table remains
-actionable at the workspace/context row level, but every row is expanded with
-its tmux, terminal, warning, and agent details inline so users do not need a
-separate selected-detail pane.
+actionable at the workspace/context row level, and each agent pane is also a
+selectable row so users can focus a pane directly. tmux and terminal names are
+not shown as persistent detail rows; missing tmux or terminal state is surfaced
+through the row status.
 
 ## Row Model
 
@@ -97,26 +88,44 @@ Replace the selected-project context rows with all-project rows:
 
 ```ts
 type WorkbenchRow =
-  | {
+  | ({
       type: "workspace";
       project: ProjectContexts;
-      label: string;
-      workspace?: WorkspaceSession;
       projectRoot: string;
-    }
-  | {
+      projectName: string;
+      name: string;
+      status: WorkspaceSession["status"];
+      agentPanes: AgentPane[];
+      workspace?: WorkspaceSession;
+    } | {
       type: "context";
       project: ProjectContexts;
-      label: string;
-      context: Context;
       projectRoot: string;
+      projectName: string;
+      name: string;
+      status: Context["status"];
+      agentPanes: AgentPane[];
+      context: Context;
+    })
+  | {
+      type: "pane";
+      project: ProjectContexts;
+      projectRoot: string;
+      projectName: string;
+      name: string;
+      status: AgentPane["status"];
+      agentPanes: [];
+      pane: AgentPane;
+      parent: Exclude<WorkbenchRow, { type: "pane" }>;
     };
 ```
 
 For each project, rows are built in this order:
 
 1. workspace row, using the real workspace session when present
-2. managed context rows in existing context order
+2. workspace agent pane rows, if any
+3. managed context rows in existing context order
+4. each context's agent pane rows, if any
 
 If a project has no workspace session, the workspace row still appears with
 `missing_tmux`, so users can create or focus the workspace without switching
@@ -127,7 +136,7 @@ views.
 Remove pane navigation from the main workflow:
 
 - `j/k` or Up/Down moves the single selected row
-- `Enter` focuses the selected workspace or branch context
+- `Enter` focuses the selected workspace, branch context, or agent pane
 - `r` refreshes all projects
 - `s` syncs the selected row's project
 - `a` adds a project path
@@ -147,15 +156,17 @@ Remove pane navigation from the main workflow:
 `h/l`, Left/Right, Tab, and Shift+Tab are removed from key hints and help
 because there are no panes to move between.
 
-## Expanded Details And Status
+## Visible Rows And Status
 
-The workspaces table shows details for every row inline:
+The workspaces table shows only scan-critical rows inline:
 
-- workspace or branch title
-- tmux session or missing-session state
-- terminal tab title or missing-tab state
+- workspace rows
+- branch context rows
+- selectable agent pane rows with agent, pane id, status, and last line
 - project warnings
-- agent pane rows with agent, pane id, status, and last line
+
+tmux session names and terminal tab titles are not displayed by default. Missing
+tmux or terminal state remains visible in the compact `Status` column.
 
 The header shows the busy state, errors, warnings, and last action messages
 inline with the top-level command hints. There is no separate activity frame;
@@ -178,7 +189,7 @@ Add or update focused tests:
 - branch prompts use the selected row's project
 - key hints omit pane navigation and include only actions valid for the row
 - layout rendering includes table headers, project headers, rows from multiple
-  projects, expanded row details, header status, and key bar
+  projects, selectable pane rows, header status, and key bar
 - state helpers no longer expose pane switching as the main navigation model
 
 Avoid brittle full-terminal snapshots. Assert stable labels, commands, and row

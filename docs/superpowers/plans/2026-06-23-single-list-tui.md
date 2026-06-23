@@ -310,9 +310,10 @@ expect(output).toContain("b");
 expect(output).toContain("/repo/a");
 expect(output).toContain("/repo/b");
 expect(output).toContain("fix/path");
-expect(output).toContain("tmux: bm_fix/path");
-expect(output).toContain("terminal: bm_fix/path");
-expect(output).toContain("claude");
+expect(output).toContain("pane");
+expect(output).toContain("claude %3");
+expect(output).not.toContain("tmux:");
+expect(output).not.toContain("terminal:");
 expect(output).not.toContain("Selected");
 expect(output).not.toContain("Projects");
 expect(output).not.toContain("Contexts");
@@ -322,13 +323,13 @@ expect(output).not.toContain("Contexts");
 
 Run: `npm test -- tests/tui-layout.test.tsx`
 
-Expected: FAIL because `WorkbenchTable` does not yet render expanded row details.
+Expected: FAIL because `WorkbenchTable` does not yet render selectable pane rows.
 
 - [ ] **Step 3: Implement table and detail layout components**
 
 Add `WorkbenchTable` to `src/tui/layout.tsx`. Use `padEnd` for stable columns,
-project header rows for each project boundary, expanded tmux/terminal/agent
-detail rows under every workspace/context, and `Text inverse` or a strong
+project header rows for each project boundary, selectable agent pane rows under
+their workspace/context, and `Text inverse` or a strong
 marker for the selected row:
 
 ```tsx
@@ -403,7 +404,7 @@ Update `tests/readme-tui-docs.test.ts` so it expects no pane navigation and expe
 
 ```ts
 expect(readme).toContain("j/k or Up/Down     move selection");
-expect(readme).toContain("Enter              focus selected workspace or context");
+expect(readme).toContain("Enter              focus selected workspace, context, or pane");
 expect(readme).not.toContain("h/l or Left/Right  switch pane");
 expect(readme).not.toContain("Tab / Shift+Tab     cycle panes");
 ```
@@ -420,7 +421,7 @@ Update the README keyboard table to remove pane movement and describe selected-r
 
 ```text
 j/k or Up/Down     move selection
-Enter              focus selected workspace or context
+Enter              focus selected workspace, context, or pane
 r                  refresh
 s                  sync selected row's project
 a                  add project path

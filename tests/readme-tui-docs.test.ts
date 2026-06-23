@@ -6,7 +6,7 @@ describe("README TUI docs", () => {
     const readme = await readFile("README.md", "utf8");
 
     expect(readme).toContain("j/k or Up/Down     move selection");
-    expect(readme).toContain("Enter              focus selected workspace or context");
+    expect(readme).toContain("Enter              focus selected workspace, context, or pane");
     expect(readme).toContain("s                  sync selected row's project");
     expect(readme).toContain("b                  create independent branch in selected row's project");
     expect(readme).toContain("B                   create dependent branch from selected context");

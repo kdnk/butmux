@@ -3,6 +3,7 @@ import {
   agentSummary,
   buildWorkbenchRows,
   createBranchPrompt,
+  focusTargetForRow,
   selectedBranchAnchor,
   toContextReorderIntent
 } from "../src/tui/rows";
@@ -115,7 +116,8 @@ describe("tui rows", () => {
       ["a", "workspace", "a", "missing_tmux"],
       ["a", "context", "feature/base", "ready"],
       ["b", "workspace", "b-workspace", "ready"],
-      ["b", "context", "fix/path", "missing_terminal"]
+      ["b", "context", "fix/path", "missing_terminal"],
+      ["b", "pane", "claude %3", "running"]
     ]);
   });
 
@@ -124,6 +126,7 @@ describe("tui rows", () => {
 
     expect(agentSummary(rows[0]!)).toBe("-");
     expect(agentSummary(rows[3]!)).toBe("claude running");
+    expect(agentSummary(rows[4]!)).toBe("working");
   });
 
   it("returns dependent branch anchors only for managed context rows", () => {
@@ -154,6 +157,22 @@ describe("tui rows", () => {
       anchorLabel: "fix/path"
     });
     expect(createBranchPrompt("B", rows[2])).toBeUndefined();
+  });
+
+  it("creates direct focus targets for selectable pane rows", () => {
+    const rows = buildWorkbenchRows([projectB]);
+
+    expect(focusTargetForRow(rows[1])).toEqual({
+      type: "context",
+      projectRoot: "/repo/b",
+      branchKey: "fix%2Fpath"
+    });
+    expect(focusTargetForRow(rows[2])).toEqual({
+      type: "context",
+      projectRoot: "/repo/b",
+      branchKey: "fix%2Fpath",
+      paneId: "%3"
+    });
   });
 
   it("computes context reorder intent within the selected row project", () => {

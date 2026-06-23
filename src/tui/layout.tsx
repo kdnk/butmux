@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Box, Text } from "ink";
-import type { AgentPane } from "../core/model";
 import {
   agentSummary,
   statusColor,
@@ -85,18 +84,13 @@ export function WorkbenchTable({
               inverse={selected}
             >
               {formatTableRow(
-                row.projectName,
+                row.type === "pane" ? "" : row.projectName,
                 row.type,
                 row.name,
                 statusLabel(row.status),
                 agentSummary(row)
               )}
             </Text>
-            {detailRows(row).map((detail, detailIndex) => (
-              <Text key={`${rowKey(row)}:detail:${detailIndex}`} dimColor>
-                {"  "}{detail}
-              </Text>
-            ))}
           </Box>
         );
       })}
@@ -156,28 +150,6 @@ function pad(value: string, width: number): string {
 
 function rowKey(row: WorkbenchRow): string {
   if (row.type === "context") return `context:${row.context.id}`;
+  if (row.type === "pane") return `pane:${rowKey(row.parent)}:${row.pane.paneId}`;
   return `workspace:${row.projectRoot}`;
-}
-
-function detailRows(row: WorkbenchRow): string[] {
-  const detail =
-    row.type === "context"
-      ? [
-          `tmux: ${row.context.tmuxSession}`,
-          `terminal: ${row.context.terminalTabTitle}`
-        ]
-      : [
-          `tmux: ${row.workspace?.name ?? "missing tmux"}`,
-          `terminal: ${row.workspace?.terminalTabTitle ?? "missing terminal"}`
-        ];
-
-  if (row.agentPanes.length === 0) return [...detail, "agents: -"];
-  return [
-    ...detail,
-    ...row.agentPanes.map((pane) => `agent: ${formatAgentPane(pane)}`)
-  ];
-}
-
-function formatAgentPane(pane: AgentPane): string {
-  return `${pane.agent} ${pane.paneId} ${pane.status} ${pane.lastLine}`;
 }

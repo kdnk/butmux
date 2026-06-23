@@ -7,7 +7,7 @@ It gives you one place to:
 - add and switch project directories
 - create independent or dependent GitButler branches from the TUI
 - sync GitButler branches into managed tmux sessions and terminal tabs
-- focus a context or workspace session
+- focus a context, workspace session, or agent pane
 - rename contexts across GitButler, tmux, and the selected terminal backend
 - reorder managed contexts from the keyboard
 - remove orphan tmux and terminal state
@@ -64,7 +64,7 @@ butmux open
 
 ```text
 j/k or Up/Down     move selection
-Enter              focus selected workspace or context
+Enter              focus selected workspace, context, or pane
 r                  refresh
 s                  sync selected row's project
 a                  add project path

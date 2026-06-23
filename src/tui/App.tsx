@@ -9,6 +9,7 @@ import { startDebouncedLiveRefresh } from "./live-refresh";
 import {
   buildWorkbenchRows,
   createBranchPrompt,
+  focusTargetForRow,
   toContextReorderIntent,
   type BranchPromptState
 } from "./rows";
@@ -252,31 +253,35 @@ export function TuiApp({ service }: { service: AppService }) {
   }
 
   async function focusSelected() {
+    const focusTarget = focusTargetForRow(selectedRow);
+    if (!focusTarget) return;
+
     if (selectedRow?.type === "workspace") {
-      const workspace = selectedRow.workspace;
-      if (!workspace) {
+      if (!selectedRow.workspace) {
         await runAction("creating workspace session", async () =>
           await service.createWorkspaceSession(selectedRow.projectRoot)
         );
         return;
       }
+    }
+
+    if (focusTarget.type === "workspace") {
       await runAction("focusing workspace", async () => {
         await service.focusWorkspaceSession({
-          projectRoot: workspace.projectRoot,
-          ...(workspace.primaryPaneId ? { paneId: workspace.primaryPaneId } : {})
+          projectRoot: focusTarget.projectRoot,
+          ...(focusTarget.paneId ? { paneId: focusTarget.paneId } : {})
         });
       });
       return;
     }
-    if (selectedRow?.type === "context") {
-      await runAction("focusing context", async () => {
-        await service.focusContext({
-          projectRoot: selectedRow.context.projectRoot,
-          branchKey: selectedRow.context.branchKey,
-          ...(selectedRow.context.primaryPaneId ? { paneId: selectedRow.context.primaryPaneId } : {})
-        });
+
+    await runAction("focusing context", async () => {
+      await service.focusContext({
+        projectRoot: focusTarget.projectRoot,
+        branchKey: focusTarget.branchKey,
+        ...(focusTarget.paneId ? { paneId: focusTarget.paneId } : {})
       });
-    }
+    });
   }
 
   return (

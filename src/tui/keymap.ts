@@ -10,7 +10,7 @@ export type KeyHintContext = {
 
 export const helpRows = [
   ["j/k, arrows", "move selection"],
-  ["enter", "focus selected workspace or context"],
+  ["enter", "focus selected workspace, context, or pane"],
   ["r", "refresh"],
   ["s", "sync selected row's project"],
   ["a", "add project path"],

@@ -68,6 +68,7 @@ describe("TUI state helpers", () => {
   });
 
   it("removes pane navigation from help rows", () => {
+    expect(helpRows).toContainEqual(["enter", "focus selected workspace, context, or pane"]);
     expect(helpRows).not.toContainEqual(["h/l, arrows", "switch pane"]);
     expect(helpRows).not.toContainEqual(["tab / shift+tab", "cycle panes"]);
   });

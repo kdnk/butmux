@@ -104,7 +104,7 @@ function renderWorkbenchLayout({
       header={<><Text>butmux</Text>{headerStatus}</>}
       keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
     >
-      <WorkbenchTable rows={rows} selectedIndex={3} />
+      <WorkbenchTable rows={rows} selectedIndex={4} />
     </Shell>,
     { columns: 120 }
   );
@@ -124,16 +124,15 @@ describe("TUI layout", () => {
     expect(output).toContain("/repo/a");
     expect(output).toContain("/repo/b");
     expect(output).toContain("a warning");
-    expect(output).toContain("tmux: missing tmux");
-    expect(output).toContain("terminal: missing terminal");
-    expect(output).toContain("tmux: bm_feature/base");
-    expect(output).toContain("terminal: bm_feature/base");
-    expect(output).toContain("tmux: b-workspace");
-    expect(output).toContain("terminal: b-workspace");
     expect(output).toContain("fix/path");
     expect(output).toContain("missing terminal");
     expect(output).toContain("claude running");
-    expect(output).toContain("bm_fix/path");
+    expect(output).toContain("pane");
+    expect(output).toContain("claude %3");
+    expect(output).toContain("working");
+    expect(output).not.toContain("tmux:");
+    expect(output).not.toContain("terminal:");
+    expect(output).not.toContain("bm_fix/path");
     expect(output).not.toContain("[2]-Selected");
     expect(output).not.toContain("Selected");
     expect(output).not.toContain("Projects");
