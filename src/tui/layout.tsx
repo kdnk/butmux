@@ -82,6 +82,7 @@ export function WorkbenchTable({
             <Text
               color={selected ? "cyan" : statusColor(row)}
               inverse={selected}
+              wrap="truncate"
             >
               {formatTableRow(
                 row.type === "pane" ? "" : row.projectName,

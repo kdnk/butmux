@@ -18,6 +18,17 @@ const runningClaude: AgentPane = {
   status: "running"
 };
 
+const longCodexLine =
+  "gpt-5.5 xhigh - ~/workspaces/github.com/kdnk/butmux - never - Context 31% left - 5h 100% left - weekly 82% left - ".repeat(3);
+
+const idleCodex: AgentPane = {
+  agent: "codex",
+  paneId: "%9",
+  command: "codex",
+  lastLine: longCodexLine,
+  status: "idle"
+};
+
 function context(input: Partial<Context> & { branch: string; projectRoot: string }): Context {
   return {
     id: `ctx-${input.branch}`,
@@ -151,6 +162,37 @@ describe("TUI layout", () => {
     expect(output).not.toContain("[2]-Keys");
     expect(output).not.toContain("Activity");
     expect(output).not.toMatch(/\n\s*\n/);
+  });
+
+  it("keeps rows single-line when pane output is wider than the table", () => {
+    const longOutputProject = project({
+      root: "/repo/long-output",
+      name: "long-output",
+      contexts: [
+        context({
+          projectRoot: "/repo/long-output",
+          branch: "long-line",
+          agentPanes: [idleCodex]
+        }),
+        context({
+          projectRoot: "/repo/long-output",
+          branch: "after-long-line"
+        })
+      ]
+    });
+
+    const output = renderToString(
+      <WorkbenchTable rows={buildWorkbenchRows([longOutputProject])} selectedIndex={2} />,
+      { columns: 120 }
+    );
+    const lines = output.split("\n");
+    const longPaneLine = lines.findIndex((line) => line.includes("codex %9"));
+    const followingContextLine = lines.findIndex((line) => line.includes("after-long-line"));
+    const workspaceBottomLine = lines.findIndex((line, index) => index > 0 && line.startsWith("╰"));
+
+    expect(longPaneLine).toBeGreaterThan(-1);
+    expect(followingContextLine).toBe(longPaneLine + 1);
+    expect(workspaceBottomLine).toBeGreaterThan(followingContextLine);
   });
 
   it("stretches every frame to the render width", () => {
