@@ -51,14 +51,24 @@ The main screen becomes a single workbench:
 butmux  backend kitty  ready
 
 Project      Type       Name                 Status           Agents
+butmux       /repo/butmux
 butmux       workspace  butmux               ready            -
+  tmux: butmux
+  terminal: butmux
+  agents: -
 butmux       branch     feature/ui           waiting          codex
+  tmux: bm_butmux_feature%2Fui
+  terminal: bm_butmux_feature%2Fui
+  agent: codex %1 running running tests
+dot          /repo/dot
 dot          workspace  dot                  missing tmux     -
+  tmux: missing tmux
+  terminal: missing terminal
+  agents: -
 dot          branch     fix/path             running          claude
-
-Selected
-feature/ui  bm_butmux_feature%2Fui  waiting
-codex %1 running running tests
+  tmux: bm_dot_fix%2Fpath
+  terminal: bm_dot_fix%2Fpath
+  agent: claude %2 running editing files
 
 b branch  B dependent  enter focus  s sync  c workspace  n rename  x remove  ? help  q quit
 ```
@@ -76,9 +86,10 @@ The selected row is visually stronger than the current `>` marker. In Ink this
 should use a reversed or highlighted row marker plus color, while staying
 readable in terminals that do not render background colors consistently.
 
-Project boundaries may be shown with a subtle blank line or dim divider only
-when it improves scanning. The table remains conceptually flat: every actionable
-workspace or branch context is one selectable row.
+Project boundaries are shown as project header rows. The table remains
+actionable at the workspace/context row level, but every row is expanded with
+its tmux, terminal, warning, and agent details inline so users do not need a
+separate selected-detail pane.
 
 ## Row Model
 
@@ -136,9 +147,9 @@ Remove pane navigation from the main workflow:
 `h/l`, Left/Right, Tab, and Shift+Tab are removed from key hints and help
 because there are no panes to move between.
 
-## Detail And Activity
+## Expanded Details And Activity
 
-The lower detail area shows only the selected row:
+The workspaces table shows details for every row inline:
 
 - workspace or branch title
 - tmux session or missing-session state
@@ -147,8 +158,8 @@ The lower detail area shows only the selected row:
 - agent pane rows with agent, pane id, status, and last line
 
 The activity strip remains the place for busy state, errors, warnings, and
-last action messages. It should be visually quieter than the selected row so it
-does not compete with the main table.
+last action messages. It should be visually quieter than the selected row and
+expanded row details so it does not compete with the main table.
 
 ## Error Handling
 
@@ -166,8 +177,8 @@ Add or update focused tests:
 - selected branch anchors are only available for managed context rows
 - branch prompts use the selected row's project
 - key hints omit pane navigation and include only actions valid for the row
-- layout rendering includes table headers, rows from multiple projects, selected
-  detail, activity strip, and key bar
+- layout rendering includes table headers, project headers, rows from multiple
+  projects, expanded row details, activity strip, and key bar
 - state helpers no longer expose pane switching as the main navigation model
 
 Avoid brittle full-terminal snapshots. Assert stable labels, commands, and row

@@ -3,7 +3,6 @@ import { Text, renderToString } from "ink";
 import {
   ActivityStrip,
   KeyBar,
-  SelectedDetail,
   Shell,
   WorkbenchTable
 } from "../src/tui/layout";
@@ -94,7 +93,7 @@ const projectB = project({
 });
 
 describe("TUI layout", () => {
-  it("renders the single-list workbench table and selected detail", () => {
+  it("renders all project rows and details in the workspaces view", () => {
     const rows = buildWorkbenchRows([projectA, projectB]);
     const output = renderToString(
       <Shell
@@ -103,7 +102,6 @@ describe("TUI layout", () => {
         keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
       >
         <WorkbenchTable rows={rows} selectedIndex={3} />
-        <SelectedDetail state={{ projectsWithContexts: [projectA, projectB], warnings: [] }} row={rows[3]} />
       </Shell>,
       { columns: 120 }
     );
@@ -115,11 +113,21 @@ describe("TUI layout", () => {
     expect(output).toContain("Agents");
     expect(output).toContain("a");
     expect(output).toContain("b");
+    expect(output).toContain("/repo/a");
+    expect(output).toContain("/repo/b");
+    expect(output).toContain("a warning");
+    expect(output).toContain("tmux: missing tmux");
+    expect(output).toContain("terminal: missing terminal");
+    expect(output).toContain("tmux: bm_feature/base");
+    expect(output).toContain("terminal: bm_feature/base");
+    expect(output).toContain("tmux: b-workspace");
+    expect(output).toContain("terminal: b-workspace");
     expect(output).toContain("fix/path");
     expect(output).toContain("missing terminal");
     expect(output).toContain("claude running");
-    expect(output).toContain("Selected");
     expect(output).toContain("bm_fix/path");
+    expect(output).not.toContain("[2]-Selected");
+    expect(output).not.toContain("Selected");
     expect(output).not.toContain("Projects");
     expect(output).not.toContain("Contexts");
   });
@@ -133,7 +141,6 @@ describe("TUI layout", () => {
         keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
       >
         <WorkbenchTable rows={rows} selectedIndex={3} />
-        <SelectedDetail state={{ projectsWithContexts: [projectA, projectB], warnings: [] }} row={rows[3]} />
       </Shell>,
       { columns: 120 }
     );
@@ -144,9 +151,8 @@ describe("TUI layout", () => {
     expect(output).toContain("╯");
     expect(output).toContain("[0]-butmux");
     expect(output).toContain("[1]-Workspaces");
-    expect(output).toContain("[2]-Selected");
-    expect(output).toContain("[3]-Activity");
-    expect(output).toContain("[4]-Keys");
+    expect(output).toContain("[2]-Activity");
+    expect(output).toContain("[3]-Keys");
     expect(output).not.toMatch(/\n\s*\n/);
   });
 });

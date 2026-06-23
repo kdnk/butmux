@@ -4,7 +4,7 @@ import type { AppService, AppState } from "../core/app-service";
 import { watchLiveUpdates } from "../core/live-updates";
 import type { Context } from "../core/model";
 import { helpRows, keyHintsForContext } from "./keymap";
-import { ActivityStrip, KeyBar, SelectedDetail, Shell, WorkbenchTable } from "./layout";
+import { ActivityStrip, KeyBar, Shell, WorkbenchTable } from "./layout";
 import { startDebouncedLiveRefresh } from "./live-refresh";
 import {
   buildWorkbenchRows,
@@ -286,7 +286,6 @@ export function TuiApp({ service }: { service: AppService }) {
       keyBar={<KeyBar rows={keyHints} />}
     >
       <WorkbenchTable rows={rows} selectedIndex={rowIndex} />
-      <SelectedDetail state={state} row={selectedRow} />
       {helpOpen ? <HelpOverlay /> : null}
       {prompt ? <PromptView prompt={prompt} /> : null}
     </Shell>

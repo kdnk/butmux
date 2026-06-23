@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 import { Box, Text } from "ink";
-import type { AppState } from "../core/app-service";
 import type { AgentPane } from "../core/model";
 import {
   agentSummary,
-  detailTitle,
   statusColor,
   statusLabel,
   type WorkbenchRow
@@ -47,7 +45,7 @@ export function ActivityStrip({
   const message = error ? `error: ${error}` : busy ?? lastSync ?? warnings[0] ?? "ready";
   const color = error ? "red" : busy ? "yellow" : warnings.length > 0 ? "yellow" : "green";
   return (
-    <Frame title="[3]-Activity" borderColor={color}>
+    <Frame title="[2]-Activity" borderColor={color}>
       <Text color={color}>{message}</Text>
     </Frame>
   );
@@ -55,7 +53,7 @@ export function ActivityStrip({
 
 export function KeyBar({ rows }: { rows: readonly (readonly [string, string])[] }) {
   return (
-    <Frame title="[4]-Keys" borderColor="gray" flexWrap="wrap" gap={1}>
+    <Frame title="[3]-Keys" borderColor="gray" flexWrap="wrap" gap={1}>
       {rows.map(([keys, label]) => (
         <Text key={`${keys}:${label}`}>
           <Text color="cyan">{keys}</Text> {label}
@@ -78,64 +76,37 @@ export function WorkbenchTable({
       {rows.length === 0 ? <Text dimColor>No projects</Text> : null}
       {rows.map((row, index) => {
         const selected = index === selectedIndex;
+        const showProjectHeader = index === 0 || rows[index - 1]?.projectRoot !== row.projectRoot;
         return (
-          <Text
-            key={rowKey(row)}
-            color={selected ? "cyan" : statusColor(row)}
-            inverse={selected}
-          >
-            {formatTableRow(
-              row.projectName,
-              row.type,
-              row.name,
-              statusLabel(row.status),
-              agentSummary(row)
-            )}
-          </Text>
+          <Box key={rowKey(row)} flexDirection="column">
+            {showProjectHeader ? (
+              <>
+                <Text bold color="cyan">{row.projectName}  {row.projectRoot}</Text>
+                {(row.project.warnings ?? []).map((warning, warningIndex) => (
+                  <Text key={`${row.projectRoot}:warning:${warningIndex}`} color="yellow">  ! {warning}</Text>
+                ))}
+              </>
+            ) : null}
+            <Text
+              color={selected ? "cyan" : statusColor(row)}
+              inverse={selected}
+            >
+              {formatTableRow(
+                row.projectName,
+                row.type,
+                row.name,
+                statusLabel(row.status),
+                agentSummary(row)
+              )}
+            </Text>
+            {detailRows(row).map((detail, detailIndex) => (
+              <Text key={`${rowKey(row)}:detail:${detailIndex}`} dimColor>
+                {"  "}{detail}
+              </Text>
+            ))}
+          </Box>
         );
       })}
-    </Frame>
-  );
-}
-
-export function SelectedDetail({
-  state,
-  row
-}: {
-  state: AppState;
-  row: WorkbenchRow | undefined;
-}) {
-  const warnings = row ? [...state.warnings, ...(row.project.warnings ?? [])] : state.warnings;
-  return (
-    <Frame title="[2]-Selected" borderColor="gray" minHeight={5}>
-      {row ? (
-        <>
-          <Text>{detailTitle(row)}</Text>
-          <Text dimColor>Project: {row.projectRoot}</Text>
-          {row.type === "context" ? (
-            <>
-              <Text dimColor>tmux: {row.context.tmuxSession}</Text>
-              <Text dimColor>terminal: {row.context.terminalTabTitle}</Text>
-            </>
-          ) : (
-            <>
-              <Text dimColor>tmux: {row.workspace?.name ?? "missing tmux"}</Text>
-              <Text dimColor>terminal: {row.workspace?.terminalTabTitle ?? "missing terminal"}</Text>
-            </>
-          )}
-          {warnings.map((warning, index) => (
-            <Text key={`warning-${index}`} color="yellow">! {warning}</Text>
-          ))}
-          {row.agentPanes.length === 0 ? <Text dimColor>agents: -</Text> : null}
-          {row.agentPanes.map((pane) => (
-            <Text key={pane.paneId} color={agentColor(pane)}>
-              {pane.agent} {pane.paneId} {pane.status} {pane.lastLine}
-            </Text>
-          ))}
-        </>
-      ) : (
-        <Text dimColor>No selection</Text>
-      )}
     </Frame>
   );
 }
@@ -194,9 +165,25 @@ function rowKey(row: WorkbenchRow): string {
   return `workspace:${row.projectRoot}`;
 }
 
-function agentColor(pane: AgentPane): "green" | "yellow" | "red" | "white" {
-  if (pane.status === "running") return "green";
-  if (pane.status === "waiting") return "yellow";
-  if (pane.status === "error") return "red";
-  return "white";
+function detailRows(row: WorkbenchRow): string[] {
+  const detail =
+    row.type === "context"
+      ? [
+          `tmux: ${row.context.tmuxSession}`,
+          `terminal: ${row.context.terminalTabTitle}`
+        ]
+      : [
+          `tmux: ${row.workspace?.name ?? "missing tmux"}`,
+          `terminal: ${row.workspace?.terminalTabTitle ?? "missing terminal"}`
+        ];
+
+  if (row.agentPanes.length === 0) return [...detail, "agents: -"];
+  return [
+    ...detail,
+    ...row.agentPanes.map((pane) => `agent: ${formatAgentPane(pane)}`)
+  ];
+}
+
+function formatAgentPane(pane: AgentPane): string {
+  return `${pane.agent} ${pane.paneId} ${pane.status} ${pane.lastLine}`;
 }

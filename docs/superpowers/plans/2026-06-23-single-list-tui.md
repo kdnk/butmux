@@ -285,12 +285,11 @@ Use a commit description with Why and What.
 - Consumes `WorkbenchRow` helpers from Task 1 and key hint helpers from Task 2.
 - Produces:
   - `WorkbenchTable({ rows, selectedIndex })`
-  - `SelectedDetail({ state, row })`
   - `TuiApp` with one `rowIndex` selection state.
 
 - [ ] **Step 1: Write failing layout tests**
 
-Update `tests/tui-layout.test.tsx` to render a shell with `WorkbenchTable` and `SelectedDetail`:
+Update `tests/tui-layout.test.tsx` to render a shell with `WorkbenchTable`:
 
 ```tsx
 const rows = buildWorkbenchRows([projectA, projectB]);
@@ -301,7 +300,6 @@ const output = renderToString(
     keyBar={<KeyBar rows={[["enter", "focus"], ["b", "branch"]]} />}
   >
     <WorkbenchTable rows={rows} selectedIndex={3} />
-    <SelectedDetail state={{ projectsWithContexts: [projectA, projectB], warnings: [] }} row={rows[3]} />
   </Shell>,
   { columns: 120 }
 );
@@ -310,9 +308,13 @@ expect(output).toContain("Project");
 expect(output).toContain("Type");
 expect(output).toContain("a");
 expect(output).toContain("b");
+expect(output).toContain("/repo/a");
+expect(output).toContain("/repo/b");
 expect(output).toContain("fix/path");
-expect(output).toContain("Selected");
+expect(output).toContain("tmux: bm_fix/path");
+expect(output).toContain("terminal: bm_fix/path");
 expect(output).toContain("claude");
+expect(output).not.toContain("Selected");
 expect(output).not.toContain("Projects");
 expect(output).not.toContain("Contexts");
 ```
@@ -321,11 +323,14 @@ expect(output).not.toContain("Contexts");
 
 Run: `npm test -- tests/tui-layout.test.tsx`
 
-Expected: FAIL because `WorkbenchTable` and `SelectedDetail` do not exist.
+Expected: FAIL because `WorkbenchTable` does not yet render expanded row details.
 
 - [ ] **Step 3: Implement table and detail layout components**
 
-Add `WorkbenchTable` and `SelectedDetail` to `src/tui/layout.tsx`. Use `padEnd` for stable columns and `Text inverse` or a strong marker for the selected row:
+Add `WorkbenchTable` to `src/tui/layout.tsx`. Use `padEnd` for stable columns,
+project header rows for each project boundary, expanded tmux/terminal/agent
+detail rows under every workspace/context, and `Text inverse` or a strong
+marker for the selected row:
 
 ```tsx
 export function WorkbenchTable({ rows, selectedIndex }: { rows: WorkbenchRow[]; selectedIndex: number }) {
@@ -343,7 +348,8 @@ export function WorkbenchTable({ rows, selectedIndex }: { rows: WorkbenchRow[]; 
 }
 ```
 
-Implement `SelectedDetail` with selected title, project root, tmux or workspace name, warnings, and agent pane rows.
+Do not add a separate selected-detail component; all details stay inside the
+workspaces table.
 
 - [ ] **Step 4: Run layout tests and verify they pass**
 
@@ -362,7 +368,8 @@ In `src/tui/App.tsx`:
 - call `createBranchPrompt(input, selectedRow)`
 - use `selectedRow.projectRoot` for `s`, `b`, `c`, and workspace removal
 - use `selectedRow.context` for `B`, `n`, orphan removal, context reorder, and focus
-- use `WorkbenchTable` and `SelectedDetail` in the render tree
+- use only `WorkbenchTable` for the main workbench rows and remove the selected
+  detail section from the render tree
 
 - [ ] **Step 6: Run focused TUI tests**
 
