@@ -73,6 +73,7 @@ export function WorkbenchTable({
           <Box key={rowKey(row)} flexDirection="column">
             {showProjectHeader ? (
               <>
+                {index > 0 ? <ProjectSeparator /> : null}
                 <Text bold color="cyan">{row.projectName}  {row.projectRoot}</Text>
                 {(row.project.warnings ?? []).map((warning, warningIndex) => (
                   <Text key={`${row.projectRoot}:warning:${warningIndex}`} color="yellow">  ! {warning}</Text>
@@ -85,6 +86,10 @@ export function WorkbenchTable({
       })}
     </Frame>
   );
+}
+
+function ProjectSeparator() {
+  return <Text dimColor wrap="truncate">{"─".repeat(200)}</Text>;
 }
 
 function TableRow({
@@ -150,7 +155,7 @@ function formatTableRow(kind: string, name: string, status: string, agents: stri
   return [
     pad(kind, 10),
     pad(name, 38),
-    pad(status, 17),
+    pad(status, 21),
     agents
   ].join(" ");
 }
@@ -162,7 +167,32 @@ function rowKindLabel(row: WorkbenchRow): string {
 }
 
 function pad(value: string, width: number): string {
-  return value.length > width ? value.slice(0, width).padEnd(width) : value.padEnd(width);
+  const clipped = sliceToDisplayWidth(value, width);
+  return `${clipped}${" ".repeat(Math.max(0, width - displayWidth(clipped)))}`;
+}
+
+function sliceToDisplayWidth(value: string, width: number): string {
+  let next = "";
+  let used = 0;
+  for (const char of value) {
+    const charWidth = characterDisplayWidth(char);
+    if (charWidth > 0 && used + charWidth > width) break;
+    next += char;
+    used += charWidth;
+  }
+  return next;
+}
+
+function displayWidth(value: string): number {
+  let width = 0;
+  for (const char of value) width += characterDisplayWidth(char);
+  return width;
+}
+
+function characterDisplayWidth(char: string): number {
+  if (/[\u0300-\u036f\ufe00-\ufe0f]/u.test(char)) return 0;
+  if (/\p{Extended_Pictographic}/u.test(char)) return 2;
+  return 1;
 }
 
 function rowKey(row: WorkbenchRow): string {

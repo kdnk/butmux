@@ -495,6 +495,35 @@ describe("GitButler parsing", () => {
     });
   });
 
+  it("does not detect the butmux tui as a codex pane from rendered agent rows", async () => {
+    const exec: ExecFunction = async (file, args) => {
+      if (file === "tmux" && args[0] === "capture-pane" && args[3] === "%10") {
+        return {
+          stdout: [
+            "╭[0]-butmux────────────────────────────────────────╮",
+            "│ r refresh  s sync  a add  ? help  ready          │",
+            "╰──────────────────────────────────────────────────╯",
+            "╭[1]-Workspaces────────────────────────────────────╮",
+            "│ Kind       Name                       Status      │",
+            "│ agent      codex %9                   idle        │",
+            "│ gpt-5.5 xhigh · ~/workspaces/github.com/kdnk/butmux │",
+            "╰──────────────────────────────────────────────────╯"
+          ].join("\n"),
+          stderr: ""
+        };
+      }
+      throw new Error(`unexpected command: ${file} ${args.join(" ")}`);
+    };
+
+    const result = await parseTmuxCodexPanes(
+      "butmux\t%10\tnode\t\n",
+      "/repo/a",
+      exec
+    );
+
+    expect(result).toEqual({});
+  });
+
   it("prefers tmux pane options for codex status", async () => {
     const calls: Array<{ file: string; args: string[]; cwd: string }> = [];
     const exec: ExecFunction = async (file, args, cwd) => {

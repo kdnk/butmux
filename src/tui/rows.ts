@@ -127,7 +127,19 @@ export function statusColor(row: WorkbenchRow): "green" | "yellow" | "red" | "wh
 }
 
 export function statusLabel(status: WorkbenchRowStatus): string {
-  return status.replaceAll("_", " ");
+  const label = status.replaceAll("_", " ");
+  return `${statusSymbol(status)} ${label}`;
+}
+
+function statusSymbol(status: WorkbenchRowStatus): string {
+  if (status === "ready") return "✅";
+  if (status === "running") return "⚡";
+  if (status === "idle") return "💤";
+  if (status === "waiting") return "⏳";
+  if (status === "missing_tmux" || status === "missing_terminal") return "⚠️";
+  if (status === "orphan_tmux") return "👻";
+  if (status === "error") return "❌";
+  return "•";
 }
 
 export function detailTitle(row: WorkbenchRow): string {

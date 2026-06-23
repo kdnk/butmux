@@ -29,6 +29,14 @@ const idleCodex: AgentPane = {
   status: "idle"
 };
 
+const waitingClaude: AgentPane = {
+  agent: "claude",
+  paneId: "%4",
+  command: "claude",
+  lastLine: "Need approval",
+  status: "waiting"
+};
+
 function context(input: Partial<Context> & { branch: string; projectRoot: string }): Context {
   return {
     id: `ctx-${input.branch}`,
@@ -137,7 +145,7 @@ describe("TUI layout", () => {
     expect(output).toContain("/repo/b");
     expect(output).toContain("a warning");
     expect(output).toContain("fix/path");
-    expect(output).toContain("missing terminal");
+    expect(output).toContain("⚠️ missing terminal");
     expect(output).not.toContain("claude running");
     expect(output).toContain("branch");
     expect(output).toContain("agent");
@@ -152,6 +160,51 @@ describe("TUI layout", () => {
     expect(output).not.toContain("Selected");
     expect(output).not.toContain("Projects");
     expect(output).not.toContain("Contexts");
+  });
+
+  it("separates projects with a horizontal rule", () => {
+    const output = renderWorkbenchLayout();
+    const lines = output.split("\n");
+    const projectBLine = lines.findIndex((line) => line.includes("b  /repo/b"));
+
+    expect(projectBLine).toBeGreaterThan(0);
+    expect(lines[projectBLine - 1]).toMatch(/─{10}/);
+  });
+
+  it("prefixes statuses with emoji symbols", () => {
+    const emojiProject = project({
+      root: "/repo/emoji",
+      name: "emoji",
+      workspaceSession: workspace({
+        projectRoot: "/repo/emoji",
+        name: "emoji-workspace",
+        status: "ready",
+        agentPanes: [idleCodex, runningClaude, waitingClaude]
+      }),
+      contexts: [
+        context({
+          projectRoot: "/repo/emoji",
+          branch: "orphaned",
+          status: "orphan_tmux"
+        }),
+        context({
+          projectRoot: "/repo/emoji",
+          branch: "broken",
+          status: "error"
+        })
+      ]
+    });
+    const output = renderToString(
+      <WorkbenchTable rows={buildWorkbenchRows([emojiProject])} selectedIndex={0} />,
+      { columns: 140 }
+    );
+
+    expect(output).toContain("✅ ready");
+    expect(output).toContain("⚡ running");
+    expect(output).toContain("💤 idle");
+    expect(output).toContain("⏳ waiting");
+    expect(output).toContain("👻 orphan tmux");
+    expect(output).toContain("❌ error");
   });
 
   it("keeps selected rows dense instead of adding a border", () => {
