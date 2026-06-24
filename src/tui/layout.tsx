@@ -66,7 +66,6 @@ export function WorkbenchTable({
 }) {
   return (
     <Frame title="[1]-Workspaces" borderColor="cyan">
-      <Text bold color="cyan">{TABLE_ROW_INDENT}{formatTableRow("Kind", "Name", "Status", "Agents")}</Text>
       {rows.length === 0 ? <Text dimColor>No projects</Text> : null}
       {rows.map((row, index) => {
         const selected = index === selectedIndex;
@@ -105,12 +104,7 @@ function TableRow({
     <Text wrap="truncate">
       {selected ? <Text color="cyan">● </Text> : TABLE_ROW_INDENT}
       <Text color={statusColor(row)}>
-        {formatTableRow(
-          rowKindLabel(row),
-          row.name,
-          statusLabel(row.status),
-          agentSummary(row)
-        )}
+        {formatWorkbenchRow(row)}
       </Text>
     </Text>
   );
@@ -161,9 +155,23 @@ function formatTableRow(kind: string, name: string, status: string, agents: stri
   ].join(" ");
 }
 
+function formatWorkbenchRow(row: WorkbenchRow): string {
+  if (row.type === "pane") {
+    return formatAgentRow(row.name, statusLabel(row.status), agentSummary(row));
+  }
+  return formatTableRow(rowKindLabel(row), row.name, statusLabel(row.status), agentSummary(row));
+}
+
+function formatAgentRow(name: string, status: string, agents: string): string {
+  return [
+    pad(`${TABLE_ROW_INDENT}${name}`, 49),
+    pad(status, 21),
+    agents
+  ].join(" ");
+}
+
 function rowKindLabel(row: WorkbenchRow): string {
   if (row.type === "context") return "branch";
-  if (row.type === "pane") return "agent";
   return "workspace";
 }
 

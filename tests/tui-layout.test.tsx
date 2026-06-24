@@ -134,9 +134,10 @@ describe("TUI layout", () => {
     const output = renderWorkbenchLayout();
 
     expect(output).toContain("butmux");
-    expect(output).toContain("Kind");
-    expect(output).toContain("Name");
-    expect(output).toContain("Agents");
+    expect(output).not.toContain("Kind");
+    expect(output).not.toContain("Name");
+    expect(output).not.toContain("Status");
+    expect(output).not.toContain("Agents");
     expect(output).not.toContain("Project");
     expect(output).not.toContain("Type");
     expect(output).toContain("a");
@@ -148,7 +149,7 @@ describe("TUI layout", () => {
     expect(output).toContain("⚠️ missing terminal");
     expect(output).not.toContain("claude running");
     expect(output).toContain("branch");
-    expect(output).toContain("agent");
+    expect(output).not.toContain("agent");
     expect(output).not.toContain("context");
     expect(output).not.toContain("pane");
     expect(output).toContain("claude %3");
@@ -247,6 +248,19 @@ describe("TUI layout", () => {
     expect(workspaceLine).toMatch(/│ {3}workspace/);
     expect(workspaceLine).not.toContain("●");
     expect(selectedLine).toMatch(/│ ● branch/);
+  });
+
+  it("renders agent rows as indented child rows without an agent kind label", () => {
+    const output = renderToString(
+      <WorkbenchTable rows={buildWorkbenchRows([projectB])} selectedIndex={1} />,
+      { columns: 120 }
+    );
+    const lines = output.split("\n");
+    const agentLine = lines.find((line) => line.includes("claude %3"));
+
+    expect(agentLine).toBeDefined();
+    expect(agentLine).toMatch(/│ {5}claude %3/);
+    expect(agentLine).not.toContain("agent");
   });
 
   it("renders compact round frames with lazygit-style titles", () => {
