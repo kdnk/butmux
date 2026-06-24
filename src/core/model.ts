@@ -44,6 +44,7 @@ export type TerminalTab = {
 };
 
 export type ContextStatus =
+  | "loading"
   | "ready"
   | "missing_tmux"
   | "missing_terminal"
@@ -85,6 +86,7 @@ export type Context = {
 };
 
 export type WorkspaceSessionStatus =
+  | "loading"
   | "ready"
   | "missing_tmux"
   | "missing_terminal";

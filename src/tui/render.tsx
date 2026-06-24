@@ -5,6 +5,7 @@ import { TuiApp } from "./App";
 
 export async function renderTui(input: { configDir: string; stateDir: string }): Promise<void> {
   const service = createAppService(input);
-  const instance = render(<TuiApp service={service} />);
+  const initialState = await service.loadCachedState();
+  const instance = render(<TuiApp service={service} initialState={initialState} />);
   await instance.waitUntilExit();
 }
