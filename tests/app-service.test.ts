@@ -108,6 +108,50 @@ describe("createAppService", () => {
     await expect(loadConfig(configDir)).resolves.toEqual({ terminalBackend: "wezterm" });
   });
 
+  it("builds an immediate cached state from the registry without reading external system state", async () => {
+    const { service, stateDir, readFullSystemSnapshot } = await createTempService();
+    await saveRegistry(stateDir, {
+      projects: [
+        {
+          root: "/repo/a",
+          name: "a",
+          projectKey: "%2Frepo%2Fa",
+          order: 10,
+          enabled: true
+        }
+      ],
+      contexts: [
+        {
+          id: "ctx-a",
+          projectRoot: "/repo/a",
+          branch: "feature/a",
+          branchKey: "feature%2Fa",
+          tmuxSession: "bm_a_feature%2Fa",
+          terminalTabTitle: "bm_a_feature%2Fa",
+          order: 10,
+          createdAt: "2026-06-22T00:00:00.000Z",
+          updatedAt: "2026-06-22T00:00:00.000Z"
+        }
+      ]
+    });
+
+    const state = await service.loadCachedState();
+
+    expect(readFullSystemSnapshot).not.toHaveBeenCalled();
+    expect(state.warnings).toEqual([]);
+    expect(state.projectsWithContexts[0]?.workspaceSession).toMatchObject({
+      name: "a",
+      status: "loading"
+    });
+    expect(state.projectsWithContexts[0]?.contexts).toEqual([
+      expect.objectContaining({
+        branch: "feature/a",
+        status: "loading",
+        agentPanes: []
+      })
+    ]);
+  });
+
   it("adds a project root and refreshes app state", async () => {
     const { service, stateDir } = await createTempService();
 

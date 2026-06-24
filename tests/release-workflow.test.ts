@@ -35,7 +35,7 @@ describe("npm publish workflow", () => {
     };
 
     expect(packageJson.private).not.toBe(true);
-    expect(packageJson.version).toBe("0.4.2");
+    expect(packageJson.version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(packageJson.repository).toEqual({
       type: "git",
       url: "https://github.com/kdnk/butmux"

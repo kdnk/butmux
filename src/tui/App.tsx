@@ -27,9 +27,9 @@ const emptyState: AppState = {
   warnings: []
 };
 
-export function TuiApp({ service }: { service: AppService }) {
+export function TuiApp({ service, initialState = emptyState }: { service: AppService; initialState?: AppState }) {
   const { exit } = useApp();
-  const [state, setState] = useState<AppState>(emptyState);
+  const [state, setState] = useState<AppState>(initialState);
   const [rowIndex, setRowIndex] = useState(0);
   const [busy, setBusy] = useState<string | undefined>("loading");
   const [error, setError] = useState<string | undefined>();

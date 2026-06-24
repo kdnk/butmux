@@ -19,12 +19,14 @@ import {
 import {
   buildBranchKey,
   buildManagedName,
+  buildWorkspaceSessionName,
   detectAllContexts,
   ensureProject,
   planSync,
   reconcileRegistry,
   removeProject,
   type Branch,
+  type Context,
   type ProjectContexts,
   type Registry,
   type SyncCommand,
@@ -56,6 +58,7 @@ export type CreateBranchInput = {
 };
 
 export type AppService = {
+  loadCachedState(): Promise<AppState>;
   refresh(): Promise<AppState>;
   sync(): Promise<AppState & { commands: SyncCommand[] }>;
   syncProject(root: string): Promise<AppState & { commands: SyncCommand[] }>;
@@ -216,6 +219,10 @@ export function createAppService(options: CreateAppServiceOptions): AppService {
   }
 
   return {
+    async loadCachedState() {
+      return buildCachedAppState(await loadRegistry(options.stateDir));
+    },
+
     async refresh() {
       return await getReconciledFullState();
     },
@@ -450,6 +457,45 @@ export function buildAppState(
       ]
     })),
     warnings: snapshot.globalWarnings
+  };
+}
+
+export function buildCachedAppState(registry: Registry): AppState {
+  return {
+    projectsWithContexts: [...(registry.projects ?? [])]
+      .sort((a, b) => a.order - b.order)
+      .map((project): ProjectContexts => {
+        const workspaceName = buildWorkspaceSessionName(project.root);
+        return {
+          project,
+          workspaceSession: {
+            type: "workspace",
+            projectRoot: project.root,
+            name: workspaceName,
+            terminalTabTitle: workspaceName,
+            agentPanes: [],
+            status: "loading"
+          },
+          contexts: registry.contexts
+            .filter((context) => context.projectRoot === project.root)
+            .sort((a, b) => a.order - b.order || a.branch.localeCompare(b.branch))
+            .map((context): Context => ({
+              id: context.id,
+              type: "managed",
+              projectRoot: context.projectRoot,
+              branch: context.branch,
+              branchKey: context.branchKey,
+              tmuxSession: context.tmuxSession,
+              terminalTabTitle: context.terminalTabTitle,
+              agentPanes: [],
+              order: context.order,
+              status: "loading",
+              ...(context.branchId ? { branchId: context.branchId } : {})
+            })),
+          warnings: []
+        };
+      }),
+    warnings: []
   };
 }
 
